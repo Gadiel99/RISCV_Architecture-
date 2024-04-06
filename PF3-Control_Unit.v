@@ -59,3 +59,47 @@ Demostración:
 -En líneas sucesivas deben imprimir las señales de control que llegan a las etapas EX, MEM y WB respectivamente (en binario).
 
 */
+
+//Program Counter module
+module pc_reg ( input wire clk,
+                input wire rst,
+                input wire en,
+                input wire [31:0] in,
+                output reg [31:0] out
+);
+
+    always@(posedge clk) begin
+        if (rst) out <= 32'b0;
+        else if (en) out <= in;
+    end
+endmodule
+
+//Generic pipeline register module 
+//Maybe use this to create all the pipeline registers | IF/ID -> ID/EX -> EX/MEM -> MEM/WB |
+module pipeline_reg(input wire clk,
+                    input wire rst,
+                    input wire [N-1:0] in, 
+                    output reg [N-1:0] out,
+
+    parameter N = 32; //Default register size
+
+    always @(posedge clk) begin
+        if(rst) out <= {N{1'b0}};
+        else out <= in;
+    end 
+);         
+endmodule
+
+//Control unit module
+module control_unit(input wire [31:0] instruction,
+                    output reg[OUTPUT_BITS-1:0] control_signals,
+                    //TODO: Define the others output signals
+);
+    //Decode logic begeins here
+    always @(*) begin
+        if(instruction == 32'b0) control_signals = {OUTPUT_BITS{1'b0}};
+        else begin
+            //TODO: Decode Logic here
+        end
+    end
+endmodule
