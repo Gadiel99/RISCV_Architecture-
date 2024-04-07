@@ -91,15 +91,62 @@ module pipeline_reg(input wire clk,
 endmodule
 
 //Control unit module
-module control_unit(input wire [31:0] instruction,
-                    output reg[OUTPUT_BITS-1:0] control_signals,
-                    //TODO: Define the others output signals
-);
+module control_unit(input [31:0] instruction,
+        output reg [3:0] id_alu_op, 
+               reg [2:0] id_shifter_imm,
+               reg id_rf_enable, 
+               reg id_load_inst, 
+               reg id_mem_ins_enable, 
+               reg id_mem_write, 
+               reg [1:0] size,
+               reg [9:0] id_full_cond,
+               reg ex_jalr_sig,
+               reg id_auipc_s,
+               reg id_jal_sig);
     //Decode logic begeins here
-    always @(*) begin
-        if(instruction == 32'b0) control_signals = {OUTPUT_BITS{1'b0}};
-        else begin
-            //TODO: Decode Logic here
-        end
+    
+always @(instruction)
+    begin
+    id_alu_op = 0;
+    id_shifter_imm = 0;
+    id_rf_enable = 0;
+    id_load_inst = 0;
+    id_mem_ins_enable = 0;
+    id_mem_write = 0;
+    size = 0;
+    id_full_cond = 0;
+    ex_jalr_sig = 0;
+    id_auipc_s = 0;
+    id_jal_sig = 0;
+    
+    if(instruction !=0)
+        case(instruction[6:0]) // Check the opcode
+            7'b0110011: begin // R-Type
+                // Set control signals for R-Type instruction
+
+            end
+            7'b0010011: begin // I-Type (could also include other opcodes for I-Type instructions)
+                // Set control signals for I-Type instruction
+
+            end
+            7'b0100011: begin // S-Type
+                // Set control signals for S-Type instruction
+            end
+            7'b1100011: begin // B-Type
+                // Set control signals for B-Type instruction
+            // If it's a branch instruction, combine the opcode and funct3
+            id_full_cond <= {instruction[6:0], instruction[14:12]};
+            end
+            7'b0110111, 7'b0010111: begin // U-Type (lui and auipc)
+                // Set control signals for U-Type instruction
+            end
+            7'b1101111: begin // J-Type
+                // Set control signals for J-Type instruction
+            end
+            default: begin
+                // Handle undefined opcode
+            end
+        endcase
     end
+end
 endmodule
