@@ -105,48 +105,273 @@ module control_unit(input [31:0] instruction,
                reg id_jal_sig);
     //Decode logic begeins here
     
-always @(instruction)
-    begin
-    id_alu_op = 0;
-    id_shifter_imm = 0;
-    id_rf_enable = 0;
-    id_load_inst = 0;
-    id_mem_ins_enable = 0;
-    id_mem_write = 0;
-    size = 0;
-    id_full_cond = 0;
-    ex_jalr_sig = 0;
-    id_auipc_s = 0;
-    id_jal_sig = 0;
-    
-    if(instruction !=0)
-        case(instruction[6:0]) // Check the opcode
-            7'b0110011: begin // R-Type
-                // Set control signals for R-Type instruction
+    always @(instruction)
+        begin
+        id_alu_op = 0;
+        id_shifter_imm = 0;
+        id_rf_enable = 0;
+        id_load_inst = 0;
+        id_mem_ins_enable = 0;
+        id_mem_write = 0;
+        size = 0;
+        id_full_cond = 0;
+        ex_jalr_sig = 0;
+        id_auipc_s = 0;
+        id_jal_sig = 0;
+        func3[2:0] = instruction[14:12]; 
+        
+        if(instruction !=0)
+            case(instruction[6:0]) // Check the opcode
+                7'b0110011: begin // R-Type
+                    // Set control signals for R-Type instruction
+                    id_alu_op = 1;
+                    id_rf_enable = 1;
+                    id_mem_ins_enable = 1;
+                    case(func3)
+                    
 
-            end
-            7'b0010011: begin // I-Type (could also include other opcodes for I-Type instructions)
-                // Set control signals for I-Type instruction
+                        3'b000: begin
+                            add_sub_sign = instruction[30];
 
-            end
-            7'b0100011: begin // S-Type
-                // Set control signals for S-Type instruction
-            end
-            7'b1100011: begin // B-Type
-                // Set control signals for B-Type instruction
-            // If it's a branch instruction, combine the opcode and funct3
-            id_full_cond <= {instruction[6:0], instruction[14:12]};
-            end
-            7'b0110111, 7'b0010111: begin // U-Type (lui and auipc)
-                // Set control signals for U-Type instruction
-            end
-            7'b1101111: begin // J-Type
-                // Set control signals for J-Type instruction
-            end
-            default: begin
-                // Handle undefined opcode
-            end
-        endcase
+                            case(add_sub_sign)
+                                1'1: begin // SUB case
+                                    $display("SUB");
+
+                                end
+
+                                1'0: begin // ADD case
+                                    $display("SUB");
+
+                                end
+                            endcase
+                        end
+                        3'b101: begin
+                            add_sub_sign = instruction[30];
+
+                            case(add_sub_sign)
+                                1'1: begin // SUB case
+                                    $display("SRA");
+
+                                end
+
+                                1'0: begin // ADD case
+                                    $display("SRL");
+
+                                end
+                            endcase
+                        end
+
+                        3'b010: begin
+                            $display("SLT");
+                        end
+
+                        3'b011: begin
+                            $display("SLTU");
+                        end
+
+                        3'b111: begin
+                            $display("AND");
+                        end
+
+                        3'b110: begin
+                            $display("OR");
+                        end
+
+                        3'b100: begin
+                            $display("XOR");
+                        end
+
+                        3'b001: begin
+                            $display("SLL");
+                        end
+
+                    endcase
+                end
+            
+                7'b0010011: begin // I-Type (could also include other opcodes for I-Type instructions)
+                    // Set control signals for I-Type instruction
+
+                    id_alu_op = 1;
+                    id_shifter_imm = 1;
+                    id_mem_ins_enable = 1;
+                    id_rf_enable = 1;
+
+                    case(func3)
+
+                         3'b000: begin
+                            $display("ADDI");
+                        end
+
+                         3'b010: begin
+                            $display("SLTI");
+                        end
+
+                         3'b011: begin
+                            $display("SLTIU");
+                        end
+                        
+                         3'b111: begin
+                            $display("ANDI");
+                        end
+
+                         3'b110: begin
+                            $display("ORI");
+                        end
+
+                         3'b100: begin
+                            $display("XORI");
+                        end
+
+                         3'b001: begin
+                            $display("SLLI");
+                        end
+
+                        3'b101: begin
+                            add_sub_sign = instruction[30];
+
+                            case(add_sub_sign)
+                                1'1: begin // SRAI case
+                                    $display("SRAI");
+
+                                end
+
+                                1'0: begin // SRLI case
+                                    $display("SRLI");
+
+                                end
+                            endcase
+                        end
+                        
+                    endcase
+                end
+
+                7'b1100111: begin // jalr
+                    // Set control signals for jalr instruction
+                    id_alu_op = 1;
+                    id_shifter_imm = 1;
+                    id_mem_ins_enable = 1;
+                    id_rf_enable = 1;
+                    ex_jalr_sig = 1;
+                         $display("JALR");
+                end 
+
+                7'b0000011: begin // I-Type
+                    // Set control signals for Load Instructions instruction
+                    id_alu_op = 1;
+                    id_shifter_imm = 1;
+                    id_rf_enable = 1;
+                    id_load_inst = 1;
+                    id_mem_ins_enable = 1;
+                    case(func3)
+                        3'b010:begin
+                            size = 2'b10; //LW
+                            $display("LW");
+                        end
+                        3'b001:begin
+                            size = 2'b01; //LH
+                            $display("LH");
+                        end
+                        3'b101:begin
+                            size = 2'b01; //LHU
+                            $display("LHU");
+                        end
+                        3'b000:begin
+                            size = 2'b00; //LB
+                            $display("LB");
+                        end
+                        3'b100:begin
+                            size = 2'b00; //LBU
+                            $display("LBU");
+                        end
+                    endcase
+                end
+
+                7'b0100011: begin // S-Type
+                    // Set control signals for S-Type instruction
+                    id_alu_op = 1;
+                    id_shifter_imm = 1;
+                    id_mem_ins_enable = 1;
+                    id_mem_write = 1;
+                    case(func3)
+                        3'b000: begin 
+                            size <= 2'b00; // SB instruction
+                            $display("SB");
+                        end
+                        3'b001: begin
+                            size <= 2'b01; // SH instruction
+                            $display("SH");
+                        end
+                        3'b010: begin
+                            size <= 2'b10; // SW instruction
+                            $display("SW");
+                        end
+                    endcase
+                end
+
+                7'b1100011: begin // B-Type
+                    // Set control signals for B-Type instruction
+                // If it's a branch instruction, combine the opcode and funct3
+                    id_full_cond <= {instruction[6:0], instruction[14:12]};
+                    id_alu_op = 1;
+                    id_shifter_imm = 1;
+                    case(func3)
+
+                         3'b000: begin
+                            $display("BEQ");
+                        end
+
+                         3'b001: begin
+                            $display("BNE");
+                        end
+
+                         3'b100: begin
+                            $display("BLT");
+                        end
+                        
+                         3'b101: begin
+                            $display("BGE");
+                        end
+
+                         3'b110: begin
+                            $display("BLTU");
+                        end
+
+                         3'b111: begin
+                            $display("BGEU");
+                        end
+                    endcase 
+                end
+                7'b0110111: begin // U-Type (lui)
+                    // Set control signals for U-Type instruction
+                    //TODO: special case
+                    id_shifter_imm = 1;
+                    id_rf_enable = 1;
+                    $display("LUI");
+                end 
+                
+                
+                7'b0010111: begin // U-Type (auipc)
+                    // Set control signals for U-Type instruction
+                    //TODO: special case
+                    id_alu_op = 1;
+                    id_shifter_imm = 1;
+                    id_rf_enable = 1;
+                    id_auipc_s = 1;
+                    $display("AUIPC");
+                end
+                7'b1101111: begin // J-Type
+                    // Set control signals for J-Type instruction
+                    //TODO: special case
+                    id_rf_enable = 1;
+                    id_jal_sig = 1;
+                    $display("JAL");
+                end
+                default: begin
+                    // Handle undefined opcode
+                    $display("Undefined opcode");
+
+                end
+            endcase
+        end 
     end
-end
 endmodule
