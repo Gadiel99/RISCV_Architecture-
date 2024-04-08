@@ -105,8 +105,7 @@ module control_unit(input [31:0] instruction,
                reg id_jal_sig);
     //Decode logic begeins here
     
-    always @(instruction)
-        begin
+    always @(instruction)begin
         id_alu_op = 0;
         id_shifter_imm = 0;
         id_rf_enable = 0;
@@ -120,7 +119,7 @@ module control_unit(input [31:0] instruction,
         id_jal_sig = 0;
         func3[2:0] = instruction[14:12]; 
         
-        if(instruction !=0)
+        if(instruction !=0) begin
             case(instruction[6:0]) // Check the opcode
                 7'b0110011: begin // R-Type
                     // Set control signals for R-Type instruction
