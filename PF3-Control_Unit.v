@@ -169,7 +169,7 @@ module control_unit(
                 7'b1100011: begin // B-Type
                     // Set control signals for B-Type instruction
                     // If it's a branch instruction, combine the opcode and funct3
-                id_full_cond <= {instruction[6:0], instruction[14:12]};
+                    id_full_cond <= {instruction[6:0], instruction[14:12]};
                 end
                 7'b0110111, 7'b0010111: begin // U-Type (lui and auipc)
                     // Set control signals for U-Type instruction

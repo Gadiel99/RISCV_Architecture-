@@ -50,7 +50,7 @@ module testbench;
     
     // Monitor signals during the test
     initial begin
-        $monitor("Time=%g, Reset=%b, Enable=%b, PC=%h, Instruction=%h",
+        $monitor("Time=%g, Reset=%b, Enable=%b, PC=%b, Instruction=%b",
                   $time, rst, en, pc_out, instruction);
     end
     
