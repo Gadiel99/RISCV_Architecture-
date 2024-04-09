@@ -39,8 +39,6 @@ Demostración:
     00000000 00000000 00000000 00000000 NOP
 
 
-
-
     -La simulación debe comenzar haciendo, a tiempo cero, Clk igual a cero, reset igual a uno y las
     señales de enable de los registros PC y el IF/ID igual a uno. Entonces, Clk debe cambiar de estado
     cada dos unidades de tiempo de manera perpetua. 
