@@ -26,7 +26,7 @@ module testbench;
     // Clock generation
     initial begin
         clk = 0;
-        forever #5 clk = ~clk; // Generate a clock with a period of 10 ns
+        forever #1 clk = ~clk; // Generate a clock with a period of 10 ns
     end
     
     // Test sequence
