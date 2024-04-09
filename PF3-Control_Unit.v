@@ -82,7 +82,7 @@ module control_signals_mux(
 
 parameter NUM_CONTROL_SIGNALS = 10; // Here goes the quantity of signals 
 
-// El MUX selecciona entre dos conjuntos de señales de control basado en 'sel'
+// Makes the seleection of the output signal.
 assign out = s ? in_1 : in_0;
 
 endmodule
