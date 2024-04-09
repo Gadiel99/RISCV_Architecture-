@@ -41,11 +41,11 @@ Demostración:
 
 
 
-    -La simulación debe comenzar haciendo, a tiempo cero, Clk igual a cero, Reset igual a uno y las
+    -La simulación debe comenzar haciendo, a tiempo cero, Clk igual a cero, reset igual a uno y las
     señales de enable de los registros PC y el IF/ID igual a uno. Entonces, Clk debe cambiar de estado
     cada dos unidades de tiempo de manera perpetua. 
 
-    -La señal Reset debe cambiar a 0 en tiempo 3.
+    -La señal reset debe cambiar a 0 en tiempo 3.
 
     -La señal S del multiplexer debe tener un valor de cero a tiempo cero y debe cambiar a 1 a tiempo
     40. 
@@ -62,32 +62,16 @@ Demostración:
 
 //Program Counter module
 module pc_reg ( input wire clk,
-                input wire rst,
+                input wire reset,
                 input wire en,
                 input wire [31:0] in,
                 output reg [31:0] out
 );
 
     always@(posedge clk) begin
-        if (rst) out <= 32'b0;
+        if (reset) out <= 32'b0;
         else if (en) out <= in;
     end
-endmodule
-
-//Generic pipeline register module 
-//Maybe use this to create all the pipeline registers | IF/ID -> ID/EX -> EX/MEM -> MEM/WB |
-module pipeline_reg(input wire clk,
-                    input wire rst,
-                    input wire [N-1:0] in, 
-                    output reg [N-1:0] out,
-
-    parameter N = 32; //Default register size
-
-    always @(posedge clk) begin
-        if(rst) out <= {N{1'b0}};
-        else out <= in;
-    end 
-);         
 endmodule
 
 //Control unit module
@@ -100,10 +84,10 @@ module control_unit(input [31:0] instruction,
                reg id_mem_write, 
                reg [1:0] size,
                reg [9:0] id_full_cond,
-               reg ex_jalr_sig,
+               reg id_jalr_sig,
                reg id_auipc_s,
                reg id_jal_sig);
-    //Decode logic begeins here
+    //Decode logic begins here
     
     always @(instruction)begin
         id_alu_op = 0;
@@ -114,7 +98,7 @@ module control_unit(input [31:0] instruction,
         id_mem_write = 0;
         size = 0;
         id_full_cond = 0;
-        ex_jalr_sig = 0;
+        id_jalr_sig = 0;
         id_auipc_s = 0;
         id_jal_sig = 0;
         func3[2:0] = instruction[14:12]; 
@@ -250,7 +234,7 @@ module control_unit(input [31:0] instruction,
                     id_shifter_imm = 1;
                     id_mem_ins_enable = 1;
                     id_rf_enable = 1;
-                    ex_jalr_sig = 1;
+                    id_jalr_sig = 1;
                          $display("JALR");
                 end 
 
@@ -371,6 +355,156 @@ module control_unit(input [31:0] instruction,
 
                 end
             endcase
+        end else begin
+                $display("NOP");
+            end
+    end
+endmodule
+
+//IF/ID PIPELINE REGISTER
+module IF_ID_pipeline_register( output reg [31:0] instruction, ID_PC,
+                                input  clk, reset,IF_ID_LOAD,
+                                input [31:0] ins_mem_out, PC);
+
+    always@(posedge clk)
+    begin
+
+        if(reset==1 ) begin
+            $display("-------------NOP IF/ID--------------");
+            
+            instruction <= 32'b0;
+            ID_PC <= 32'b0;
+        end 
+        else begin
+            if (IF_ID_LOAD == 1) begin 
+            instruction <= ins_mem_out;
+            ID_PC <= PC;
         end 
     end
+        
+    end
+
+endmodule
+
+//ID/EX PIPELINE REGISTER
+module ID_EX_pipeline_register( output reg ex_rf_enable,
+                                       reg [3:0] ex_alu_op,
+                                       reg [2:0] ex_shifter_imm,
+                                       reg ex_load_inst,
+                                       reg ex_mem_ins_enable,
+                                       reg ex_mem_write, 
+                                       reg [1:0] ex_size,
+                                       reg [9:0] ex_full_cond,
+                                       reg ex_jalr_sig,
+                                       reg ex_auipc_s,
+                                       reg ex_jal_sig,
+
+                                input [3:0] id_alu_op, 
+                                    [2:0] id_shifter_imm,
+                                    id_rf_enable, 
+                                    id_load_inst, 
+                                    id_mem_ins_enable, 
+                                    id_mem_write, 
+                                    [1:0] size,
+                                    [9:0] id_full_cond,
+                                    id_jalr_sig,
+                                    id_auipc_s,
+                                    id_jal_sig,
+                                    clk, reset
+                                    );
+
+    always@(posedge clk)
+    begin
+        
+        if(reset==1) begin
+            $display("-------------NOP ID/EXE--------------");
+            ex_rf_enable <= 1'b0;
+            ex_alu_op <= 4'b0;
+            ex_shifter_imm <= 3'b0;
+            ex_load_inst <= 1'b0;
+            ex_mem_ins_enable <= 1'b0;
+            ex_mem_write <= 1'b0;
+            ex_size <= 2'b0;
+            ex_full_cond <= 10'b0;
+            ex_jalr_sig <= 1'b0;
+            ex_auipc_s <= 1'b0;
+            ex_jal_sig <= 1'b0;
+
+        end else begin
+        //Control Unit signals  
+            ex_rf_enable <= id_rf_enable;
+            ex_alu_op <= id_alu_op;
+            ex_shifter_imm <= id_shifter_imm;
+            ex_load_inst <= id_load_inst;
+            ex_mem_ins_enable <= id_mem_ins_enable;
+            ex_mem_write <= id_mem_write;
+            ex_size <= size;
+            ex_full_cond <= id_full_cond;
+            ex_jalr_sig <= id_jalr_sig;
+            ex_auipc_s <= id_auipc_s;
+            ex_jal_sig <= id_jal_sig;
+        end
+    end
+   
+endmodule
+
+//EX/MEM PIPELINE REGISTER
+
+module EX_MEM_pipeline_register(    output reg mem_rf_enable,
+                                       reg mem_load_inst,
+                                       reg mem_mem_ins_enable,
+                                       reg mem_mem_write, 
+                                       reg [1:0] mem_size,
+
+
+                                input  ex_rf_enable,
+                                        ex_load_inst,
+                                        ex_mem_ins_enable,
+                                        ex_mem_write, 
+                                        [1:0] ex_size,
+                                        clk, reset
+                                       );
+
+    always@(posedge clk)
+    begin
+        
+        if(reset==1) begin
+            $display("-------------NOP EXE/MEM--------------");
+            mem_rf_enable <= 1'b0;
+            mem_load_inst <= 1'b0;
+            mem_mem_ins_enable <= 1'b0;
+            mem_mem_write <= 1'b0;
+            mem_size <= 2'b0;
+
+        end else begin
+        //Control Unit signals  
+            mem_rf_enable <= ex_rf_enable;
+            mem_load_inst <= ex_load_inst;
+            mem_mem_ins_enable <= ex_mem_ins_enable;
+            mem_mem_write <= ex_mem_write;
+            mem_size <= ex_size;            
+        end
+    end
+   
+endmodule
+
+//MEM/WB PIPELINE REGISTER
+module MEM_WB_pipeline_register(    
+                                    output reg wb_rf_enable,
+
+                                    input  clk, reset, mem_rf_enable);
+
+    always@(posedge clk)
+    begin
+        
+        if(reset==1) begin
+            $display("-------------NOP MEM/WB--------------");
+            wb_rf_enable <= 1'b0;
+
+        end else begin
+        //Control Unit signals  
+            wb_rf_enable <= mem_rf_enable;
+        end
+    end
+   
 endmodule
