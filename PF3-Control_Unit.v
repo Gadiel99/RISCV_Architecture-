@@ -72,6 +72,21 @@ module pc_reg ( input wire clk,
     end
 endmodule
 
+//Control unit MUX 
+module control_signals_mux(
+    input wire s,                       
+    input wire [NUM_CONTROL_SIGNALS-1:0] in_0, 
+    input wire [NUM_CONTROL_SIGNALS-1:0] in_1, 
+    output wire [NUM_CONTROL_SIGNALS-1:0] out 
+)
+
+parameter NUM_CONTROL_SIGNALS = 10; // Here goes the quantity of signals 
+
+// El MUX selecciona entre dos conjuntos de señales de control basado en 'sel'
+assign out = s ? in_1 : in_0;
+
+endmodule
+
 //Control unit module
 module control_unit(input [31:0] instruction,
         output reg [3:0] id_alu_op, 
