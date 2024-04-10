@@ -121,7 +121,7 @@ module control_unit(input [31:0] instruction,
                                 end
 
                                 1'0: begin // ADD case
-                                    $display("SUB");
+                                    $display("ADD");
 
                                 end
                             endcase
