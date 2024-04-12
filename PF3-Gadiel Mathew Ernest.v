@@ -59,11 +59,6 @@ Demostración:
 */
 /*****Instruction Memory Module - ROM*****/
 
-/* -Añadir la señal SE  
-   -Añadir los mem instruccion enable 
-
-*/
-
 module instruction_memory(
     input [8:0] address, // 9 bits address for the input
     output [31:0] instruction // 32 bits output.
@@ -78,9 +73,9 @@ module instruction_memory(
     end 
     
     //Making the arragment for the instruction
-    assign instruction = {mem[address + 3], mem[address + 2], mem[address + 1], mem[address]};
-    
+    assign instruction = {mem[address + 3], mem[address + 2], mem[address + 1], mem[address]};  
 endmodule
+
 //Program Counter module
 module pc_reg ( input wire clk,
                 input wire reset,
@@ -94,6 +89,7 @@ module pc_reg ( input wire clk,
         else if (en) out <= in;
     end
 endmodule
+
 // Control unit MUX
 module control_signals_mux #(
     parameter NUM_CONTROL_SIGNALS = 10 // Here goes the quantity of signals
@@ -230,7 +226,7 @@ module control_unit(input wire [31:0] instruction,
 
                     id_alu_op = 1;
                     id_shifter_imm = 3'b001;
-                    id_mem_ins_enable = 0;
+                    //id_mem_ins_enable = 0;
                     id_rf_enable = 1;
 
                     case(func3)
@@ -306,7 +302,8 @@ module control_unit(input wire [31:0] instruction,
                     id_mem_ins_enable = 1;
                     id_rf_enable = 1;
                     id_jalr_sig = 1;
-                         $display("JALR");
+                    $display("JALR");
+                    
                 end 
 
                 7'b0000011: begin // I-Type
