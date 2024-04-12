@@ -57,7 +57,7 @@ Demostración:
 -En líneas sucesivas deben imprimir las señales de control que llegan a las etapas EX, MEM y WB respectivamente (en binario).
 
 */
-/*****Instruction Memory Module - ROM*****/
+/**Instruction Memory Module - ROM**/
 
 /* -Añadir la señal SE  
    -Añadir los mem instruccion enable 
@@ -74,7 +74,7 @@ module instruction_memory(
     //Reading the preload memory
     //If this is not working specified the whole directory of the file.
     initial begin
-      $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/test-code.txt", mem, 0, 511);
+      $readmemb("C:/Users/maxme/Desktop/project P/RISCV_Architecture-/test-code.txt", mem, 0, 511);
     end 
     
     //Making the arragment for the instruction
@@ -94,61 +94,68 @@ module pc_reg ( input wire clk,
         else if (en) out <= in;
     end
 endmodule
+
 // Control unit MUX
-module control_signals_mux #(
-    parameter NUM_CONTROL_SIGNALS = 10 // Here goes the quantity of signals
-)(
-    input wire s,                       
-    input wire [NUM_CONTROL_SIGNALS-1:0] in_0, 
-    input wire [NUM_CONTROL_SIGNALS-1:0] in_1, 
-    output wire [NUM_CONTROL_SIGNALS-1:0] out 
+module control_signals_mux(
+    output reg [30:0] out_control_signals,  // Output control signals
+    input [30:0] control_signals,           // Input control signals
+    input wire s                            // Control signal to select outputs
 );
-
-    // Makes the selection of the output signal.
-    assign out = s ? in_1 : in_0;
-
+    // Procedural block that reacts to changes in 's' or 'control_signals'
+    always @(*) begin
+        if (s) begin
+            out_control_signals = 31'b0;  // Set output to zero when s is high
+        end else begin
+            out_control_signals = control_signals;  // Pass through when s is low
+        end
+    end
 endmodule
+
 
 
 //Control unit module
 module control_unit(input wire [31:0] instruction,
-    output reg [3:0] id_alu_op, 
-    output reg [2:0] id_shifter_imm,
-    output reg id_rf_enable, 
-    output reg id_load_inst, 
-    output reg id_mem_ins_enable, 
-    output reg id_mem_write, 
-    output reg [1:0] size,
-    output reg id_se,
-    output reg [9:0] id_full_cond,
-    output reg id_jalr_sig,
-    output reg id_auipc_s,
-    output reg id_jal_sig,
-    output reg add_sub_sign,
-                    output reg [2:0] func3);
+        output reg [30:0] control_signals);
+
+    reg [3:0] id_alu_op;
+    reg [2:0] id_shifter_imm;
+    reg id_rf_enable;
+    reg id_load_inst;
+    reg id_mem_ins_enable;
+    reg id_mem_write;
+    reg [1:0] size;
+    reg id_se;
+    reg [9:0] id_full_cond;
+    reg id_jalr_sig;
+    reg id_auipc_s;
+    reg id_jal_sig;
+    reg add_sub_sign;
+    reg [2:0] func3;
     //Decode logic begins here
     
     always @(instruction)begin
-        id_alu_op = 0;
-        id_shifter_imm = 0;
-        id_rf_enable = 0;
-        id_load_inst = 0;
-        id_mem_ins_enable = 0;
-        id_mem_write = 0;
-        size = 0;
-        id_se = 0; 
-        id_full_cond = 0;
-        id_jalr_sig = 0;
-        id_auipc_s = 0;
-        id_jal_sig = 0;
+        id_alu_op = 4'b0000;
+        id_shifter_imm = 3'b000;
+        id_rf_enable = 1'b0;
+        id_load_inst = 1'b0;
+        id_mem_ins_enable = 1'b0;
+        id_mem_write = 1'b0;
+        size = 2'b00;
+        id_se = 1'b0;
+        id_full_cond = 10'b0000000000;
+        id_jalr_sig = 1'b0;
+        id_auipc_s = 1'b0;
+        id_jal_sig = 1'b0;
+        add_sub_sign = 1'b0;
         func3 = instruction[14:12];
+        control_signals = {id_alu_op, id_shifter_imm, id_rf_enable, id_load_inst,
+                       id_mem_ins_enable, id_mem_write, size, id_se, id_full_cond,
+                       id_jalr_sig, id_auipc_s, id_jal_sig, add_sub_sign,func3};
         
         if(instruction !=0) begin
             case(instruction[6:0]) // Check the opcode
                 7'b0110011: begin // R-Type
                     // Set control signals for R-Type instruction
-                   // id_alu_op = 1;
-                   //id_mem_ins_enable = 1;
                     id_rf_enable = 1;
                     
                     case(func3)
@@ -230,7 +237,6 @@ module control_unit(input wire [31:0] instruction,
 
                     id_alu_op = 1;
                     id_shifter_imm = 3'b001;
-                    id_mem_ins_enable = 0;
                     id_rf_enable = 1;
 
                     case(func3)
@@ -303,7 +309,6 @@ module control_unit(input wire [31:0] instruction,
                     // Set control signals for jalr instruction
                     id_alu_op = 4'b0100;
                     id_shifter_imm = 3'b001;
-                    id_mem_ins_enable = 1;
                     id_rf_enable = 1;
                     id_jalr_sig = 1;
                          $display("JALR");
@@ -474,18 +479,7 @@ endmodule
 //ID/EX PIPELINE REGISTER
 module ID_EX_pipeline_register( input wire clk, 
     input wire reset,
-    input wire [3:0] id_alu_op, 
-    input wire [2:0] id_shifter_imm,
-    input wire id_rf_enable, 
-    input wire id_load_inst, 
-    input wire id_mem_ins_enable, 
-    input wire id_mem_write, 
-    input wire [1:0] size,
-    input wire id_se,
-    input wire [9:0] id_full_cond,
-    input wire id_jalr_sig,
-    input wire id_auipc_s,
-    input wire id_jal_sig,
+    input wire [30:0] control_signals,
     output reg ex_rf_enable,
     output reg [3:0] ex_alu_op,
     output reg [2:0] ex_shifter_imm,
@@ -504,34 +498,33 @@ module ID_EX_pipeline_register( input wire clk,
     begin
         
         if(reset==1) begin
-            $display("-------------NOP ID/EXE--------------");
-            ex_rf_enable <= 1'b0;
-            ex_alu_op <= 4'b0;
-            ex_shifter_imm <= 3'b0;
-            ex_load_inst <= 1'b0;
-            ex_mem_ins_enable <= 1'b0;
-            ex_mem_write <= 1'b0;
-            ex_size <= 2'b0;
-            ex_se <= 2'b0;
-            ex_full_cond <= 10'b0;
-            ex_jalr_sig <= 1'b0;
-            ex_auipc_s <= 1'b0;
-            ex_jal_sig <= 1'b0;
+        ex_rf_enable <= 0;
+        ex_alu_op <= 0;
+        ex_shifter_imm <= 0;
+        ex_load_inst <= 0;
+        ex_mem_ins_enable <= 0;
+        ex_mem_write <= 0;
+        ex_size <= 0;
+        ex_se <= 0;
+        ex_full_cond <= 0;
+        ex_jalr_sig <= 0;
+        ex_auipc_s <= 0;
+        ex_jal_sig <= 0;
 
-        end else begin
-        //Control Unit signals  
-            ex_rf_enable <= id_rf_enable;
-            ex_alu_op <= id_alu_op;
-            ex_shifter_imm <= id_shifter_imm;
-            ex_load_inst <= id_load_inst;
-            ex_mem_ins_enable <= id_mem_ins_enable;
-            ex_mem_write <= id_mem_write;
-            ex_size <= size;
-            ex_se <= id_se;
-            ex_full_cond <= id_full_cond;
-            ex_jalr_sig <= id_jalr_sig;
-            ex_auipc_s <= id_auipc_s;
-            ex_jal_sig <= id_jal_sig;
+    end else begin
+        // Unpacking control_signals into individual signals
+        ex_alu_op <= control_signals[30:27];
+        ex_shifter_imm <= control_signals[26:24];
+        ex_rf_enable <= control_signals[23];
+        ex_load_inst <= control_signals[22];
+        ex_mem_ins_enable <= control_signals[21];
+        ex_mem_write <= control_signals[20];
+        ex_size <= control_signals[19:18];
+        ex_se <= control_signals[17];
+        ex_full_cond <= control_signals[16:7];
+        ex_jalr_sig <= control_signals[6];
+        ex_auipc_s <= control_signals[5];
+        ex_jal_sig <= control_signals[4];
         end
     end
    
@@ -610,10 +603,10 @@ module Adder(
     end
 endmodule
 
-
 module processor(
     input wire clk,
-    input wire reset
+    input wire reset,
+    input wire s
 );
 
     // Internal signals
@@ -665,6 +658,9 @@ module processor(
     //ins_mem_out && ID_EX_pc_next, EX_MEM_pc_next, MEM_WB_pc_next
     wire [31:0] ins_mem_out, ID_EX_pc_next, EX_MEM_pc_next, MEM_WB_pc_next;
 
+    wire [30:0] control_signals;  // Assuming this comes from the control unit
+    wire [30:0] muxed_control_signals;  // This will be used by the rest of your processor
+
     // PC Reg
     pc_reg pc_reg_inst(
         .clk(clk),
@@ -694,38 +690,22 @@ module processor(
     // Control Unit
     control_unit control_unit_inst(
         .instruction(ins_mem_out),
-        .id_alu_op(id_alu_op),
-        .id_shifter_imm(id_shifter_imm),
-        .id_rf_enable(id_rf_enable),
-        .id_load_inst(id_load_inst),
-        .id_mem_ins_enable(id_mem_ins_enable),
-        .id_mem_write(id_mem_write),
-        .size(id_size),
-        .id_se(id_se),
-        .id_full_cond(id_full_cond),
-        .id_jalr_sig(id_jalr_sig),
-        .id_auipc_s(id_auipc_s),
-        .id_jal_sig(id_jal_sig),
-        .add_sub_sign(add_sub_sign),
-        .func3(func3)
+        .control_signals(control_signals)
     );
+
+    //MUX for Control Unit
+    control_signals_mux control_mux_inst(
+    .control_signals(control_signals),  
+    .out_control_signals(muxed_control_signals),
+    .s(s)  
+    );
+
 
     // ID/EX Pipeline Register
     ID_EX_pipeline_register ID_EX_pipeline_register_inst(
         .clk(clk),
         .reset(reset),
-        .id_alu_op(id_alu_op),
-        .id_shifter_imm(id_shifter_imm),
-        .id_rf_enable(id_rf_enable),
-        .id_load_inst(id_load_inst),
-        .id_mem_ins_enable(id_mem_ins_enable),
-        .id_mem_write(id_mem_write),
-        .size(id_size),
-        .id_se(id_se),
-        .id_full_cond(id_full_cond),
-        .id_jalr_sig(id_jalr_sig),
-        .id_auipc_s(id_auipc_s),
-        .id_jal_sig(id_jal_sig),
+        .control_signals(muxed_control_signals),        
         .ex_rf_enable(ex_rf_enable),
         .ex_alu_op(ex_alu_op),
         .ex_shifter_imm(ex_shifter_imm),
@@ -777,6 +757,7 @@ module processor_testbench;
     // Inputs
     reg clk;
     reg reset;
+    reg s;
     wire [3:0] id_alu_op, ex_alu_op;
     wire id_rf_enable, ex_rf_enable, mem_rf_enable, wb_rf_enable;
     wire id_load_inst, ex_load_inst, mem_load_inst;
@@ -789,11 +770,14 @@ module processor_testbench;
     wire id_auipc_s, ex_auipc_s;
     wire id_jal_sig, ex_jal_sig;
     wire [31:0] pc_current, instruction, id_pc;
+    wire [30:0] muxed_control_signals;
+
 
     // Instantiate the processor module
     processor uut (
         .clk(clk),
-        .reset(reset)
+        .reset(reset),
+        .s(s)
     );
 
     initial begin
@@ -804,6 +788,10 @@ module processor_testbench;
         // Wait 3 ns then release reset
         #3;
         reset = 0;
+
+        // S will become 1 at 40 ns
+        #40
+        s = 1;
 
         // Finish simulation at 48 ns
         #48;
