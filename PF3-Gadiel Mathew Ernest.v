@@ -119,6 +119,7 @@ module control_unit(input wire [31:0] instruction,
     output reg id_mem_ins_enable, 
     output reg id_mem_write, 
     output reg [1:0] size,
+    output reg id_se,
     output reg [9:0] id_full_cond,
     output reg id_jalr_sig,
     output reg id_auipc_s,
@@ -135,7 +136,7 @@ module control_unit(input wire [31:0] instruction,
         id_mem_ins_enable = 0;
         id_mem_write = 0;
         size = 0;
-        //mem_se = 0; 
+        id_se = 0; 
         id_full_cond = 0;
         id_jalr_sig = 0;
         id_auipc_s = 0;
@@ -325,7 +326,7 @@ module control_unit(input wire [31:0] instruction,
                         end
                         3'b001:begin
                             size = 2'b01; //LH
-                            //mem_se = 1;
+                            id_se = 1;
                             $display("LH");
                         end
                         3'b101:begin
@@ -334,7 +335,7 @@ module control_unit(input wire [31:0] instruction,
                         end
                         3'b000:begin
                             size = 2'b00; //LB
-                            //mem_se = 1;
+                            id_se = 1;
                             //SE igual a 1 
                             $display("LB");
                         end
@@ -480,6 +481,7 @@ module ID_EX_pipeline_register( input wire clk,
     input wire id_mem_ins_enable, 
     input wire id_mem_write, 
     input wire [1:0] size,
+    input wire id_se,
     input wire [9:0] id_full_cond,
     input wire id_jalr_sig,
     input wire id_auipc_s,
@@ -491,6 +493,7 @@ module ID_EX_pipeline_register( input wire clk,
     output reg ex_mem_ins_enable,
     output reg ex_mem_write, 
     output reg [1:0] ex_size,
+    output reg ex_se,
     output reg [9:0] ex_full_cond,
     output reg ex_jalr_sig,
     output reg ex_auipc_s,
@@ -509,6 +512,7 @@ module ID_EX_pipeline_register( input wire clk,
             ex_mem_ins_enable <= 1'b0;
             ex_mem_write <= 1'b0;
             ex_size <= 2'b0;
+            ex_se <= 2'b0;
             ex_full_cond <= 10'b0;
             ex_jalr_sig <= 1'b0;
             ex_auipc_s <= 1'b0;
@@ -523,6 +527,7 @@ module ID_EX_pipeline_register( input wire clk,
             ex_mem_ins_enable <= id_mem_ins_enable;
             ex_mem_write <= id_mem_write;
             ex_size <= size;
+            ex_se <= id_se;
             ex_full_cond <= id_full_cond;
             ex_jalr_sig <= id_jalr_sig;
             ex_auipc_s <= id_auipc_s;
@@ -541,11 +546,14 @@ module EX_MEM_pipeline_register(     input wire clk,
     input wire ex_mem_ins_enable,
     input wire ex_mem_write, 
     input wire [1:0] ex_size,
+    input wire ex_se,
     output reg mem_rf_enable,
     output reg mem_load_inst,
     output reg mem_mem_ins_enable,
     output reg mem_mem_write, 
-    output reg [1:0] mem_size);
+    output reg [1:0] mem_size,
+    output reg mem_se
+    );
 
     always@(posedge clk)
     begin
@@ -557,6 +565,7 @@ module EX_MEM_pipeline_register(     input wire clk,
             mem_mem_ins_enable <= 1'b0;
             mem_mem_write <= 1'b0;
             mem_size <= 2'b0;
+            mem_se <= 1'b0;
 
         end else begin
         //Control Unit signals  
@@ -564,7 +573,8 @@ module EX_MEM_pipeline_register(     input wire clk,
             mem_load_inst <= ex_load_inst;
             mem_mem_ins_enable <= ex_mem_ins_enable;
             mem_mem_write <= ex_mem_write;
-            mem_size <= ex_size;            
+            mem_size <= ex_size;
+            mem_se <= ex_se;            
         end
     end
    
@@ -608,20 +618,51 @@ module processor(
 
     // Internal signals
     wire [31:0] pc_current, pc_next, instruction, id_pc;
+
+    //alu_op
     wire [3:0] id_alu_op, ex_alu_op;
+
+    //shifter_imm
     wire [2:0] id_shifter_imm, ex_shifter_imm;
+    
+    //rf_enable
     wire id_rf_enable, ex_rf_enable, mem_rf_enable, wb_rf_enable;
+
+    //load_inst
     wire id_load_inst, ex_load_inst, mem_load_inst;
+
+    //mem_ins_enable
     wire id_mem_ins_enable, ex_mem_ins_enable, mem_mem_ins_enable;
+
+    //mem_write_enable
     wire id_mem_write, ex_mem_write, mem_mem_write;
+
+    //size
     wire [1:0] id_size, ex_size, mem_size;
+
+    //se
+    wire id_se, ex_se, mem_se;
+
+    //full_cond
     wire [9:0] id_full_cond, ex_full_cond;
+
+    //jalr_sig
     wire id_jalr_sig, ex_jalr_sig;
+
+    //auipc_s
     wire id_auipc_s, ex_auipc_s;
     wire id_jal_sig, ex_jal_sig;
+
+    //add_sub_sign
     wire add_sub_sign;
+    
+    //funct3 
     wire [2:0] func3;
+    
+    //IF_ID_LOAD
     wire IF_ID_LOAD = 1'b1; // Assuming always enabled for this phase
+    
+    //ins_mem_out && ID_EX_pc_next, EX_MEM_pc_next, MEM_WB_pc_next
     wire [31:0] ins_mem_out, ID_EX_pc_next, EX_MEM_pc_next, MEM_WB_pc_next;
 
     // PC Reg
@@ -660,6 +701,7 @@ module processor(
         .id_mem_ins_enable(id_mem_ins_enable),
         .id_mem_write(id_mem_write),
         .size(id_size),
+        .id_se(id_se),
         .id_full_cond(id_full_cond),
         .id_jalr_sig(id_jalr_sig),
         .id_auipc_s(id_auipc_s),
@@ -679,6 +721,7 @@ module processor(
         .id_mem_ins_enable(id_mem_ins_enable),
         .id_mem_write(id_mem_write),
         .size(id_size),
+        .id_se(id_se),
         .id_full_cond(id_full_cond),
         .id_jalr_sig(id_jalr_sig),
         .id_auipc_s(id_auipc_s),
@@ -690,6 +733,7 @@ module processor(
         .ex_mem_ins_enable(ex_mem_ins_enable),
         .ex_mem_write(ex_mem_write),
         .ex_size(ex_size),
+        .ex_se(ex_se),
         .ex_full_cond(ex_full_cond),
         .ex_jalr_sig(ex_jalr_sig),
         .ex_auipc_s(ex_auipc_s),
@@ -705,11 +749,13 @@ module processor(
         .ex_mem_ins_enable(ex_mem_ins_enable),
         .ex_mem_write(ex_mem_write),
         .ex_size(ex_size),
+        .ex_se(ex_se),
         .mem_rf_enable(mem_rf_enable),
         .mem_load_inst(mem_load_inst),
         .mem_mem_ins_enable(mem_mem_ins_enable),
         .mem_mem_write(mem_mem_write),
-        .mem_size(mem_size)
+        .mem_size(mem_size),
+        .mem_se(mem_se)
     );
 
     // MEM/WB Pipeline Register
@@ -737,6 +783,7 @@ module processor_testbench;
     wire id_mem_ins_enable, ex_mem_ins_enable, mem_mem_ins_enable;
     wire id_mem_write, ex_mem_write, mem_mem_write;
     wire [1:0] id_size, ex_size, mem_size;
+    wire id_se, ex_se, mem_se;
     wire [9:0] id_full_cond, ex_full_cond;
     wire id_jalr_sig, ex_jalr_sig;
     wire id_auipc_s, ex_auipc_s;
@@ -785,27 +832,27 @@ module processor_testbench;
     //              uut.EX_MEM_pipeline_register_inst.mem_size,
     //              uut.MEM_WB_pipeline_register_inst.wb_rf_enable);
         
-        $display("\nTime: %t \nPC:%d \nInstruction Fetched: %b", $time,uut.pc_reg_inst.out, utt.instruction_memory_inst.instruction);
+        $display("\nTime: %t \nPC:%d \nInstruction Fetched: %b", $time,uut.pc_reg_inst.out, uut.instruction_memory_inst.instruction);
 
-        $display("\n| ID Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |", 
+        $display("\n| ID Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |", 
                 uut.control_unit_inst.id_rf_enable, uut.control_unit_inst.id_alu_op, uut.control_unit_inst.id_shifter_imm, uut.control_unit_inst.id_load_inst,
-                uut.control_unit_inst.id_mem_ins_enable, uut.control_unit_inst.id_mem_write, uut.control_unit_inst.size,
+                uut.control_unit_inst.id_mem_ins_enable, uut.control_unit_inst.id_mem_write, uut.control_unit_inst.size, uut.control_unit_inst.id_se,
                 uut.control_unit_inst.id_full_cond, uut.control_unit_inst.id_jalr_sig, uut.control_unit_inst.id_auipc_s,
                 uut.control_unit_inst.id_jal_sig
         );
 
-        $display("\n| EX Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |",
+        $display("\n| EX Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b, Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |",
                 uut.ID_EX_pipeline_register_inst.ex_rf_enable, uut.ID_EX_pipeline_register_inst.ex_alu_op, uut.ID_EX_pipeline_register_inst.ex_shifter_imm,
                 uut.ID_EX_pipeline_register_inst.ex_load_inst, uut.ID_EX_pipeline_register_inst.ex_mem_ins_enable,
-                uut.ID_EX_pipeline_register_inst.ex_mem_write, uut.ID_EX_pipeline_register_inst.ex_size,
+                uut.ID_EX_pipeline_register_inst.ex_mem_write, uut.ID_EX_pipeline_register_inst.ex_size, uut.ID_EX_pipeline_register_inst.ex_se,
                 uut.ID_EX_pipeline_register_inst.ex_full_cond, uut.ID_EX_pipeline_register_inst.ex_jalr_sig,
                 uut.ID_EX_pipeline_register_inst.ex_auipc_s, uut.ID_EX_pipeline_register_inst.ex_jal_sig,
         );
 
-        $display("\n| MEM Signals: RF En %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b |", 
+        $display("\n| MEM Signals: RF En %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b |", 
                 uut.EX_MEM_pipeline_register_inst.mem_rf_enable, uut.EX_MEM_pipeline_register_inst.mem_load_inst,
                 uut.EX_MEM_pipeline_register_inst.mem_mem_ins_enable, uut.EX_MEM_pipeline_register_inst.mem_mem_write,
-                uut.EX_MEM_pipeline_register_inst.mem_size
+                uut.EX_MEM_pipeline_register_inst.mem_size, uut.EX_MEM_pipeline_register_inst.mem_se
         );
 
 
