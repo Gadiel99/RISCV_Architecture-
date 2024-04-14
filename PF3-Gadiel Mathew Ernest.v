@@ -834,7 +834,7 @@ module processor_testbench;
     // Inputs
     reg clk;
     reg reset;
-    reg s; // Stall signal for the multiplexer
+    reg s; 
 
     // Instantiate the processor module
     processor uut (
