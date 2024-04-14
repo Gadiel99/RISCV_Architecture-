@@ -840,7 +840,7 @@ module processor_testbench;
     processor uut (
         .clk(clk),
         .reset(reset),
-        .s(s) // Ensure 's' is connected in your processor module
+        .s(s) 
     );
 
     initial begin
