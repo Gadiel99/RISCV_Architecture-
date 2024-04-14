@@ -365,7 +365,7 @@ module control_unit(input wire [31:0] instruction,
                     id_shifter_imm = 0;
                     case(func3)
 
-                         3'b000: begin
+                        3'b000: begin
                            id_alu_op = 4'b0011;
                            
                             $display("BEQ");
