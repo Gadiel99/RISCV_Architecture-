@@ -834,91 +834,64 @@ module processor_testbench;
     // Inputs
     reg clk;
     reg reset;
-    reg s;
-    wire [3:0] muxed_id_alu_op, id_alu_op, ex_alu_op;
-    wire muxed_id_rf_enable, id_rf_enable, ex_rf_enable, mem_rf_enable, wb_rf_enable;
-    wire muxed_id_load_inst, id_load_inst, ex_load_inst, mem_load_inst;
-    wire muxed_id_mem_ins_enable, id_mem_ins_enable, ex_mem_ins_enable, mem_mem_ins_enable;
-    wire muxed_id_mem_writeid_mem_write, ex_mem_write, mem_mem_write;
-    wire [1:0] muxed_id_size, id_size, ex_size, mem_size;
-    wire muxed_id_se, id_se, ex_se, mem_se;
-    wire [9:0] muxed_id_full_cond, id_full_cond, ex_full_cond;
-    wire muxed_id_jalr_sig, id_jalr_sig, ex_jalr_sig;
-    wire muxed_id_auipc_s, id_auipc_s, ex_auipc_s;
-    wire muxed_id_jal_sig, id_jal_sig, ex_jal_sig;
-    wire [31:0] pc_current, instruction, id_pc;
+    reg s; // Stall signal for the multiplexer
 
     // Instantiate the processor module
     processor uut (
         .clk(clk),
         .reset(reset),
-        .s(s)
+        .s(s) // Ensure 's' is connected in your processor module
     );
 
     initial begin
         // Initialize Inputs
-        clk = 0;
-        reset = 1;
-        s = 0;
+        clk = 0;    
+        reset = 1;  
+        s = 0;      
 
-        // Wait 3 ns then release reset
-        //#3;
-        //reset = 0;
+        // Wait 3 units of time, then release reset
+        #3 reset = 0;
 
-        #3;
-        reset = 0;
-        
-        #10;
-        s = 0; // Deactivate stall
-        #50;
-        s = 1; // Activate stall
-        
+        // Change selector signal to 1 at time 40
+        #37 s = 1; // 37 additional units after reset is released
 
-        // Finish simulation at 48 ns
-        //#48;
-
-        #48;
-        
-        $finish;
+        // Terminate simulation at time 48
+        #8 $finish; // 8 more units after changing 's' to 1
     end
 
-    // Clock with period of 2 units
-    always #1 clk = !clk;
+    // Clock with a period of 2 units
+    always #1 clk = !clk; // Toggle clock every 1 unit of time, resulting in a period of 2 units
 
-    // Display the states of the control signals at each positive edge of the clock
+    // Display internal states at each positive edge of the clock after reset is de-asserted
     always @(posedge clk) begin
-    if (!reset) begin
-        
-        $display("\nTime: %t \nPC:%d \nInstruction Fetched: %b, \nMUX Selector: %b", $time,uut.pc_reg_inst.out, uut.instruction_memory_inst.instruction, uut.s);
+        if (!reset) begin
+            $display("\nTime: %t \nPC:%d \nInstruction Fetched: %b, \nMUX Selector: %b", 
+                     $time, uut.pc_reg_inst.out, uut.instruction_memory_inst.instruction, s);
 
-        $display("\n| ID Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |", 
-                uut.control_unit_inst.id_rf_enable, uut.control_unit_inst.id_alu_op, uut.control_unit_inst.id_shifter_imm, uut.control_unit_inst.id_load_inst,
-                uut.control_unit_inst.id_mem_ins_enable, uut.control_unit_inst.id_mem_write, uut.control_unit_inst.size, uut.control_unit_inst.id_se,
-                uut.control_unit_inst.id_full_cond, uut.control_unit_inst.id_jalr_sig, uut.control_unit_inst.id_auipc_s,
-                uut.control_unit_inst.id_jal_sig
-        );
+            $display("\n| ID Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |", 
+                     uut.control_unit_inst.id_rf_enable, uut.control_unit_inst.id_alu_op, uut.control_unit_inst.id_shifter_imm, uut.control_unit_inst.id_load_inst,
+                     uut.control_unit_inst.id_mem_ins_enable, uut.control_unit_inst.id_mem_write, uut.control_unit_inst.size, uut.control_unit_inst.id_se,
+                     uut.control_unit_inst.id_full_cond, uut.control_unit_inst.id_jalr_sig, uut.control_unit_inst.id_auipc_s,
+                     uut.control_unit_inst.id_jal_sig
+            );
 
-        $display("\n| EX Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b, Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |",
-                uut.ID_EX_pipeline_register_inst.ex_rf_enable, uut.ID_EX_pipeline_register_inst.ex_alu_op, uut.ID_EX_pipeline_register_inst.ex_shifter_imm,
-                uut.ID_EX_pipeline_register_inst.ex_load_inst, uut.ID_EX_pipeline_register_inst.ex_mem_ins_enable,
-                uut.ID_EX_pipeline_register_inst.ex_mem_write, uut.ID_EX_pipeline_register_inst.ex_size, uut.ID_EX_pipeline_register_inst.ex_se,
-                uut.ID_EX_pipeline_register_inst.ex_full_cond, uut.ID_EX_pipeline_register_inst.ex_jalr_sig,
-                uut.ID_EX_pipeline_register_inst.ex_auipc_s, uut.ID_EX_pipeline_register_inst.ex_jal_sig,
-        );
+            $display("\n| EX Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b, Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |",
+                     uut.ID_EX_pipeline_register_inst.ex_rf_enable, uut.ID_EX_pipeline_register_inst.ex_alu_op, uut.ID_EX_pipeline_register_inst.ex_shifter_imm,
+                     uut.ID_EX_pipeline_register_inst.ex_load_inst, uut.ID_EX_pipeline_register_inst.ex_mem_ins_enable,
+                     uut.ID_EX_pipeline_register_inst.ex_mem_write, uut.ID_EX_pipeline_register_inst.ex_size, uut.ID_EX_pipeline_register_inst.ex_se,
+                     uut.ID_EX_pipeline_register_inst.ex_full_cond, uut.ID_EX_pipeline_register_inst.ex_jalr_sig,
+                     uut.ID_EX_pipeline_register_inst.ex_auipc_s, uut.ID_EX_pipeline_register_inst.ex_jal_sig
+            );
 
-        $display("\n| MEM Signals: RF En %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b |", 
-                uut.EX_MEM_pipeline_register_inst.mem_rf_enable, uut.EX_MEM_pipeline_register_inst.mem_load_inst,
-                uut.EX_MEM_pipeline_register_inst.mem_mem_ins_enable, uut.EX_MEM_pipeline_register_inst.mem_mem_write,
-                uut.EX_MEM_pipeline_register_inst.mem_size, uut.EX_MEM_pipeline_register_inst.mem_se
-        );
+            $display("\n| MEM Signals: RF En %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b |", 
+                     uut.EX_MEM_pipeline_register_inst.mem_rf_enable, uut.EX_MEM_pipeline_register_inst.mem_load_inst,
+                     uut.EX_MEM_pipeline_register_inst.mem_mem_ins_enable, uut.EX_MEM_pipeline_register_inst.mem_mem_write,
+                     uut.EX_MEM_pipeline_register_inst.mem_size, uut.EX_MEM_pipeline_register_inst.mem_se
+            );
 
-
-        $display("\n| WB Signals: RF En %b |",
-                uut.MEM_WB_pipeline_register_inst.wb_rf_enable
-        
-        );
+            $display("\n| WB Signals: RF En %b |",
+                     uut.MEM_WB_pipeline_register_inst.wb_rf_enable
+            );
+        end
     end
-end
-
-
 endmodule
