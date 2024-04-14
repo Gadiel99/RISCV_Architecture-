@@ -143,8 +143,6 @@ module control_unit(input wire [31:0] instruction,
             case(instruction[6:0]) // Check the opcode
                 7'b0110011: begin // R-Type
                     // Set control signals for R-Type instruction
-                   // id_alu_op = 1;
-                   //id_mem_ins_enable = 1;
                     id_rf_enable = 1;
                     
                     case(func3)
@@ -226,7 +224,6 @@ module control_unit(input wire [31:0] instruction,
 
                     id_alu_op = 1;
                     id_shifter_imm = 3'b001;
-                    //id_mem_ins_enable = 0;
                     id_rf_enable = 1;
 
                     case(func3)
@@ -299,7 +296,6 @@ module control_unit(input wire [31:0] instruction,
                     // Set control signals for jalr instruction
                     id_alu_op = 4'b0100;
                     id_shifter_imm = 3'b001;
-                    id_mem_ins_enable = 1;
                     id_rf_enable = 1;
                     id_jalr_sig = 1;
                     $display("JALR");
