@@ -401,6 +401,7 @@ module control_unit(input wire [31:0] instruction,
                     // Set control signals for U-Type instruction
                     //TODO: special case
                     id_alu_op = 4'b0000;
+                    id_load_inst = 1;
                     id_shifter_imm = 3'b011;
                     id_rf_enable = 1;
                     $display("LUI");
@@ -861,7 +862,7 @@ module processor_testbench;
     // Display internal states at each positive edge of the clock after reset is de-asserted
     always @(posedge clk) begin
         if (!reset) begin
-            $display("\nTime: %t \nPC:%d \nInstruction Fetched: %b, \nMUX Selector: %b", 
+            $display("\nTime: %t \nPC:%d \nInstruction Fetched: %b, \nS: %b", 
                      $time, uut.pc_reg_inst.out, uut.instruction_memory_inst.instruction, s);
 
             $display("\n| ID Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |", 
