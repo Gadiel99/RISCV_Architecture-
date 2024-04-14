@@ -228,43 +228,43 @@ module control_unit(input wire [31:0] instruction,
 
                     case(func3)
 
-                         3'b000: begin
+                        3'b000: begin
                            id_alu_op = 4'b0010;
                            
                             $display("ADDI");
                         end
 
-                         3'b010: begin
+                        3'b010: begin
                             id_alu_op = 4'b1000;
                           
                             $display("SLTI");
                         end
 
-                         3'b011: begin
+                        3'b011: begin
                             id_alu_op = 4'b1001;
                            
                             $display("SLTIU");
                         end
                         
-                         3'b111: begin
+                        3'b111: begin
                             id_alu_op = 4'b1010;
                            
                             $display("ANDI");
                         end
 
-                         3'b110: begin
+                        3'b110: begin
                             id_alu_op = 4'b1011;
                           
                             $display("ORI");
                         end
 
-                         3'b100: begin
+                        3'b100: begin
                             id_alu_op = 4'b1100;
                            
                             $display("XORI");
                         end
 
-                         3'b001: begin
+                        3'b001: begin
                             id_alu_op = 4'b0101;
                             
                             $display("SLLI");
