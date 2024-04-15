@@ -69,7 +69,7 @@ module instruction_memory(
     //Reading the preload memory
     //If this is not working specified the whole directory of the file.
     initial begin
-      $readmemb("C:/test-code.txt", mem, 0, 511);
+      $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/test-code.txt", mem, 0, 511);
     end 
     
     //Making the arragment for the instruction
@@ -929,10 +929,10 @@ always #2 clk = !clk;
     //              uut.EX_MEM_pipeline_register_inst.mem_mem_ins_enable, uut.EX_MEM_pipeline_register_inst.mem_mem_write,
     //              uut.EX_MEM_pipeline_register_inst.mem_size,
     //              uut.MEM_WB_pipeline_register_inst.wb_rf_enable);
-        //$display("test");
-        $display("\nTime: %t \nPC:%d \nInstruction Fetched: %b", $time,uut.pc_reg_inst.out, uut.instruction_memory_inst.instruction);
 
-        $display("\n CU S: %b", s);
+        $display("\nTime: %t \nPC:%d \nInstruction Fetched: %b", $time,uut.pc_reg_inst.out, uut.instruction_memory_inst.instruction);
+        
+        $display("\nS: %b", s);
         
         $display("\n| ID Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |", 
                 uut.CUMux_inst.id_rf_enable_mux, uut.CUMux_inst.id_alu_op_mux, uut.CUMux_inst.id_shifter_imm_mux, uut.CUMux_inst.id_load_inst_mux,
@@ -962,7 +962,7 @@ always #2 clk = !clk;
         
         );
 
-        // $display("\n CU S: %b", s);
+        
 
    // end
 end
