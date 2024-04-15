@@ -605,7 +605,7 @@ endmodule
 
 //Control Unit Mux Module
 module CUMux (
-input wire s,
+    input wire s,
     input wire [3:0] id_alu_op, 
     input wire [2:0] id_shifter_imm,
     input wire id_rf_enable, 
@@ -624,7 +624,7 @@ input wire s,
     output reg id_load_inst_mux,
     output reg id_mem_ins_enable_mux,
     output reg id_mem_write_mux, 
-    output reg [1:0] id_size_mux,
+    output reg [1:0] size_mux,
     output reg id_se_mux,
     output reg [9:0] id_full_cond_mux,
     output reg id_jalr_sig_mux,
@@ -641,7 +641,7 @@ input wire s,
             id_load_inst_mux <= 1'b0;
             id_mem_ins_enable_mux <= 1'b0;
             id_mem_write_mux <= 1'b0;
-            id_size_mux <= 2'b0;
+            size_mux <= 2'b0;
             id_se_mux <= 2'b0;
             id_full_cond_mux <= 10'b0;
             id_jalr_sig_mux <= 1'b0;
@@ -656,7 +656,7 @@ input wire s,
             id_load_inst_mux <= id_load_inst;
             id_mem_ins_enable_mux <= id_mem_ins_enable;
             id_mem_write_mux <= id_mem_write;
-            id_size_mux <= size;
+            size_mux <= size;
             id_se_mux <= id_se;
             id_full_cond_mux <= id_full_cond;
             id_jalr_sig_mux <= id_jalr_sig;
@@ -695,7 +695,7 @@ module processor(
     wire id_mem_write, ex_mem_write, mem_mem_write, id_mem_write_mux;
 
     //size
-    wire [1:0] id_size, ex_size, mem_size, id_size_mux;
+    wire [1:0] size, ex_size, mem_size, size_mux;
 
     //se
     wire id_se, ex_se, mem_se, id_se_mux;
@@ -760,7 +760,7 @@ module processor(
         .id_load_inst(id_load_inst),
         .id_mem_ins_enable(id_mem_ins_enable),
         .id_mem_write(id_mem_write),
-        .size(id_size),
+        .size(size),
         .id_se(id_se),
         .id_full_cond(id_full_cond),
         .id_jalr_sig(id_jalr_sig),
@@ -778,7 +778,7 @@ module processor(
         .id_load_inst(id_load_inst),
         .id_mem_ins_enable(id_mem_ins_enable),
         .id_mem_write(id_mem_write),
-        .size(id_size),
+        .size(size),
         .id_se(id_se),
         .id_full_cond(id_full_cond),
         .id_jalr_sig(id_jalr_sig),
@@ -790,7 +790,7 @@ module processor(
         .id_load_inst_mux(id_load_inst_mux),
         .id_mem_ins_enable_mux(id_mem_ins_enable_mux),
         .id_mem_write_mux(id_mem_write_mux),
-        .id_size_mux(id_size_mux),
+        .size_mux(size_mux),
         .id_se_mux(id_se_mux),
         .id_full_cond_mux(id_full_cond_mux),
         .id_jalr_sig_mux(id_jalr_sig_mux),
@@ -807,7 +807,7 @@ module processor(
         .id_load_inst_mux(id_load_inst_mux),
         .id_mem_ins_enable_mux(id_mem_ins_enable_mux),
         .id_mem_write_mux(id_mem_write_mux),
-        .size_mux(id_size_mux),
+        .size_mux(size_mux),
         .id_se_mux(id_se_mux),
         .id_full_cond_mux(id_full_cond_mux),
         .id_jalr_sig_mux(id_jalr_sig_mux),
@@ -875,7 +875,7 @@ module processor_testbench;
     wire id_load_inst, ex_load_inst, mem_load_inst, id_load_inst_mux;
     wire id_mem_ins_enable, ex_mem_ins_enable, mem_mem_ins_enable, id_mem_ins_enable_mux;
     wire id_mem_write, ex_mem_write, mem_mem_write, id_mem_write_mux;
-    wire [1:0] id_size, ex_size, mem_size, id_size_mux;
+    wire [1:0] size, ex_size, mem_size, size_mux;
     wire id_se, ex_se, mem_se, id_se_mux;
     wire [9:0] id_full_cond, ex_full_cond, id_full_cond_mux;
     wire id_jalr_sig, ex_jalr_sig, id_jalr_sig_mux;
@@ -907,13 +907,13 @@ module processor_testbench;
     #8 $finish; // 48-40 = 8 because we already waited for 40 time units
 end
 
-// Generate clock with period of 2 units
-always #1 clk = !clk;
+// Generate clock with period of 4 units
+always #2 clk = !clk;
 
 
     // Display the states of the control signals at each positive edge of the clock
     always @(posedge clk) begin
-    if (!reset) begin
+  //  if (!reset) begin
     //   $display("Time: %t | PC: %d | Instruction: %b | ID Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b | EX Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b | MEM Signals: RF En %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b | WB Signals: RF En %b",
     //              $time, uut.pc_reg_inst.out, uut.instruction_memory_inst.instruction,
     //              uut.control_unit_inst.id_rf_enable, uut.control_unit_inst.id_alu_op, uut.control_unit_inst.id_shifter_imm, uut.control_unit_inst.id_load_inst,
@@ -935,10 +935,10 @@ always #1 clk = !clk;
         $display("\nS: %b", s);
         
         $display("\n| ID Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |", 
-                uut.control_unit_inst.id_rf_enable, uut.control_unit_inst.id_alu_op, uut.control_unit_inst.id_shifter_imm, uut.control_unit_inst.id_load_inst,
-                uut.control_unit_inst.id_mem_ins_enable, uut.control_unit_inst.id_mem_write, uut.control_unit_inst.size, uut.control_unit_inst.id_se,
-                uut.control_unit_inst.id_full_cond, uut.control_unit_inst.id_jalr_sig, uut.control_unit_inst.id_auipc_s,
-                uut.control_unit_inst.id_jal_sig
+                uut.CUMux_inst.id_rf_enable_mux, uut.CUMux_inst.id_alu_op_mux, uut.CUMux_inst.id_shifter_imm_mux, uut.CUMux_inst.id_load_inst_mux,
+                uut.CUMux_inst.id_mem_ins_enable_mux, uut.CUMux_inst.id_mem_write_mux, uut.CUMux_inst.size_mux, uut.CUMux_inst.id_se_mux,
+                uut.CUMux_inst.id_full_cond_mux, uut.CUMux_inst.id_jalr_sig_mux, uut.CUMux_inst.id_auipc_s_mux,
+                uut.CUMux_inst.id_jal_sig_mux
         );
 
         $display("\n| EX Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b, Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |",
@@ -964,7 +964,7 @@ always #1 clk = !clk;
 
         
 
-    end
+   // end
 end
 
 
