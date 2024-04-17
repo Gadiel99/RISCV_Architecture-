@@ -90,20 +90,20 @@ module pc_reg ( input wire clk,
     end
 endmodule
 
-// Control unit MUX
-module control_signals_mux #(
-    parameter NUM_CONTROL_SIGNALS = 10 // Here goes the quantity of signals
-)(
-    input wire s,                       
-    input wire [NUM_CONTROL_SIGNALS-1:0] in_0, 
-    input wire [NUM_CONTROL_SIGNALS-1:0] in_1, 
-    output wire [NUM_CONTROL_SIGNALS-1:0] out 
-);
+// // Control unit MUX
+// module control_signals_mux #(
+//     parameter NUM_CONTROL_SIGNALS = 10 // Here goes the quantity of signals
+// )(
+//     input wire s,                       
+//     input wire [NUM_CONTROL_SIGNALS-1:0] in_0, 
+//     input wire [NUM_CONTROL_SIGNALS-1:0] in_1, 
+//     output wire [NUM_CONTROL_SIGNALS-1:0] out 
+// );
 
-    // Makes the selection of the output signal.
-    assign out = s ? in_1 : in_0;
+//     // Makes the selection of the output signal.
+//     assign out = s ? in_1 : in_0;
 
-endmodule
+// endmodule
 
 
 //Control unit module
@@ -467,6 +467,7 @@ endmodule
 //ID/EX PIPELINE REGISTER
 module ID_EX_pipeline_register( input wire clk, 
     input wire reset,
+    input wire s,
     input wire [3:0] id_alu_op_mux, 
     input wire [2:0] id_shifter_imm_mux,
     input wire id_rf_enable_mux, 
@@ -496,8 +497,8 @@ module ID_EX_pipeline_register( input wire clk,
     always@(posedge clk)
     begin
         
-        if(reset==1) begin
-            $display("-------------NOP ID/EXE--------------");
+        if(reset==1 || s == 1) begin
+            //$display("-------------NOP ID/EXE--------------");
             ex_rf_enable <= 1'b0;
             ex_alu_op <= 4'b0;
             ex_shifter_imm <= 3'b0;
@@ -534,6 +535,7 @@ endmodule
 
 module EX_MEM_pipeline_register(     input wire clk, 
     input wire reset,
+    input wire s,
     input wire ex_rf_enable,
     input wire ex_load_inst,
     input wire ex_mem_ins_enable,
@@ -551,8 +553,8 @@ module EX_MEM_pipeline_register(     input wire clk,
     always@(posedge clk)
     begin
         
-        if(reset==1) begin
-            $display("-------------NOP EXE/MEM--------------");
+        if(reset==1 || s==1) begin
+            //$display("-------------NOP EXE/MEM--------------");
             mem_rf_enable <= 1'b0;
             mem_load_inst <= 1'b0;
             mem_mem_ins_enable <= 1'b0;
@@ -577,12 +579,12 @@ endmodule
 module MEM_WB_pipeline_register(    
                                     output reg wb_rf_enable,
 
-                                    input  clk, reset, mem_rf_enable);
+                                    input wire clk, reset, s, mem_rf_enable);
 
     always@(posedge clk)
     begin
         
-        if(reset==1) begin
+        if(reset == 1 || s == 1 ) begin
             $display("-------------NOP MEM/WB--------------");
             wb_rf_enable <= 1'b0;
 
@@ -634,7 +636,7 @@ module CUMux (
  always@* begin
         
         if(s==1) begin
-            $display("-------------NOP ID/EXE--------------");
+            //$display("-------------NOP ID/EXE--------------");
             id_rf_enable_mux <= 1'b0;
             id_alu_op_mux <= 4'b0;
             id_shifter_imm_mux <= 3'b0;
@@ -801,6 +803,7 @@ module processor(
     ID_EX_pipeline_register ID_EX_pipeline_register_inst(
         .clk(clk),
         .reset(reset),
+        .s(s),
         .id_alu_op_mux(id_alu_op_mux),
         .id_shifter_imm_mux(id_shifter_imm_mux),
         .id_rf_enable_mux(id_rf_enable_mux),
@@ -831,6 +834,7 @@ module processor(
     EX_MEM_pipeline_register EX_MEM_pipeline_register_inst(
         .clk(clk),
         .reset(reset),
+        .s(s),
         .ex_rf_enable(ex_rf_enable),
         .ex_load_inst(ex_load_inst),
         .ex_mem_ins_enable(ex_mem_ins_enable),
@@ -849,6 +853,7 @@ module processor(
     MEM_WB_pipeline_register MEM_WB_pipeline_register_inst(
         .clk(clk),
         .reset(reset),
+        .s(s),
         .mem_rf_enable(mem_rf_enable),
         .wb_rf_enable(wb_rf_enable)
     );
@@ -901,10 +906,10 @@ module processor_testbench;
     #3 reset = 0;
 
     // At time 40, set s to 1
-    #37 s = 1; // 40-3 = 37 because we wait for 3 time units before this
+    #35 s = 1; // 40-3 = 37 because we wait for 3 time units before this
 
     // End the simulation at 48 time units from the start
-    #8 $finish; // 48-40 = 8 because we already waited for 40 time units
+    #10 $finish; // 48-40 = 8 because we already waited for 40 time units
 end
 
 // Generate clock with period of 4 units
@@ -913,26 +918,10 @@ always #2 clk = !clk;
 
     // Display the states of the control signals at each positive edge of the clock
     always @(posedge clk) begin
-  //  if (!reset) begin
-    //   $display("Time: %t | PC: %d | Instruction: %b | ID Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b | EX Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b | MEM Signals: RF En %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b | WB Signals: RF En %b",
-    //              $time, uut.pc_reg_inst.out, uut.instruction_memory_inst.instruction,
-    //              uut.control_unit_inst.id_rf_enable, uut.control_unit_inst.id_alu_op, uut.control_unit_inst.id_shifter_imm, uut.control_unit_inst.id_load_inst,
-    //              uut.control_unit_inst.id_mem_ins_enable, uut.control_unit_inst.id_mem_write, uut.control_unit_inst.size,
-    //              uut.control_unit_inst.id_full_cond, uut.control_unit_inst.id_jalr_sig, uut.control_unit_inst.id_auipc_s,
-    //              uut.control_unit_inst.id_jal_sig, 
-    //              uut.ID_EX_pipeline_register_inst.ex_rf_enable, uut.ID_EX_pipeline_register_inst.ex_alu_op, uut.ID_EX_pipeline_register_inst.ex_shifter_imm,
-    //              uut.ID_EX_pipeline_register_inst.ex_load_inst, uut.ID_EX_pipeline_register_inst.ex_mem_ins_enable,
-    //              uut.ID_EX_pipeline_register_inst.ex_mem_write, uut.ID_EX_pipeline_register_inst.ex_size,
-    //              uut.ID_EX_pipeline_register_inst.ex_full_cond, uut.ID_EX_pipeline_register_inst.ex_jalr_sig,
-    //              uut.ID_EX_pipeline_register_inst.ex_auipc_s, uut.ID_EX_pipeline_register_inst.ex_jal_sig,
-    //              uut.EX_MEM_pipeline_register_inst.mem_rf_enable, uut.EX_MEM_pipeline_register_inst.mem_load_inst,
-    //              uut.EX_MEM_pipeline_register_inst.mem_mem_ins_enable, uut.EX_MEM_pipeline_register_inst.mem_mem_write,
-    //              uut.EX_MEM_pipeline_register_inst.mem_size,
-    //              uut.MEM_WB_pipeline_register_inst.wb_rf_enable);
 
-        $display("\nTime: %t \nPC:%d \nInstruction Fetched: %b", $time,uut.pc_reg_inst.out, uut.instruction_memory_inst.instruction);
+        $display("\nTime: %t \nPC:%d \nInstruction Fetched: %b \nS: %b", $time,uut.pc_reg_inst.out, uut.instruction_memory_inst.instruction, s);
         
-        $display("\nS: %b", s);
+       
         
         $display("\n| ID Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |", 
                 uut.CUMux_inst.id_rf_enable_mux, uut.CUMux_inst.id_alu_op_mux, uut.CUMux_inst.id_shifter_imm_mux, uut.CUMux_inst.id_load_inst_mux,
