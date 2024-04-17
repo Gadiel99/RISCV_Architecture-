@@ -467,7 +467,6 @@ endmodule
 //ID/EX PIPELINE REGISTER
 module ID_EX_pipeline_register( input wire clk, 
     input wire reset,
-    input wire s,
     input wire [3:0] id_alu_op_mux, 
     input wire [2:0] id_shifter_imm_mux,
     input wire id_rf_enable_mux, 
@@ -497,7 +496,7 @@ module ID_EX_pipeline_register( input wire clk,
     always@(posedge clk)
     begin
         
-        if(reset==1 || s == 1) begin
+        if(reset==1) begin
             $display("-------------NOP ID/EXE--------------");
             ex_rf_enable <= 1'b0;
             ex_alu_op <= 4'b0;
@@ -535,7 +534,6 @@ endmodule
 
 module EX_MEM_pipeline_register(     input wire clk, 
     input wire reset,
-    input wire s,
     input wire ex_rf_enable,
     input wire ex_load_inst,
     input wire ex_mem_ins_enable,
@@ -553,7 +551,7 @@ module EX_MEM_pipeline_register(     input wire clk,
     always@(posedge clk)
     begin
         
-        if(reset==1 || s==1) begin
+        if(reset==1) begin
             $display("-------------NOP EXE/MEM--------------");
             mem_rf_enable <= 1'b0;
             mem_load_inst <= 1'b0;
@@ -579,12 +577,12 @@ endmodule
 module MEM_WB_pipeline_register(    
                                     output reg wb_rf_enable,
 
-                                    input wire clk, reset, s, mem_rf_enable);
+                                    input wire clk, reset, mem_rf_enable);
 
     always@(posedge clk)
     begin
         
-        if(reset == 1 || s == 1 ) begin
+        if(reset == 1) begin
             $display("-------------NOP MEM/WB--------------");
             wb_rf_enable <= 1'b0;
 
@@ -803,7 +801,6 @@ module processor(
     ID_EX_pipeline_register ID_EX_pipeline_register_inst(
         .clk(clk),
         .reset(reset),
-        .s(s),
         .id_alu_op_mux(id_alu_op_mux),
         .id_shifter_imm_mux(id_shifter_imm_mux),
         .id_rf_enable_mux(id_rf_enable_mux),
@@ -833,8 +830,7 @@ module processor(
     // EX/MEM Pipeline Register
     EX_MEM_pipeline_register EX_MEM_pipeline_register_inst(
         .clk(clk),
-        .reset(reset),
-        .s(s),
+        .reset(reset),      
         .ex_rf_enable(ex_rf_enable),
         .ex_load_inst(ex_load_inst),
         .ex_mem_ins_enable(ex_mem_ins_enable),
@@ -853,7 +849,6 @@ module processor(
     MEM_WB_pipeline_register MEM_WB_pipeline_register_inst(
         .clk(clk),
         .reset(reset),
-        .s(s),
         .mem_rf_enable(mem_rf_enable),
         .wb_rf_enable(wb_rf_enable)
     );
@@ -907,6 +902,7 @@ module processor_testbench;
 
     // At time 40, set s to 1
     #37 s = 1; // 40-3 = 37 because we wait for 3 time units before this
+    reset = 1; //makes a pipeline cleaning after s is changed to 1.
 
     
     // End the simulation at 48 time units from the start
