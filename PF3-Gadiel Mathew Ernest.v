@@ -534,6 +534,7 @@ endmodule
 
 module EX_MEM_pipeline_register(     input wire clk, 
     input wire reset,
+    input wire s,
     input wire ex_rf_enable,
     input wire ex_load_inst,
     input wire ex_mem_ins_enable,
@@ -577,7 +578,7 @@ endmodule
 module MEM_WB_pipeline_register(    
                                     output reg wb_rf_enable,
 
-                                    input wire clk, reset, mem_rf_enable);
+                                    input wire clk, reset, s, mem_rf_enable);
 
     always@(posedge clk)
     begin
@@ -849,6 +850,7 @@ module processor(
     MEM_WB_pipeline_register MEM_WB_pipeline_register_inst(
         .clk(clk),
         .reset(reset),
+        .s(s),
         .mem_rf_enable(mem_rf_enable),
         .wb_rf_enable(wb_rf_enable)
     );
@@ -902,8 +904,6 @@ module processor_testbench;
 
     // At time 40, set s to 1
     #37 s = 1; // 40-3 = 37 because we wait for 3 time units before this
-    reset = 1; //makes a pipeline cleaning after s is changed to 1.
-
     
     // End the simulation at 48 time units from the start
     #8 $finish; // 48-40 = 8 because we already waited for 40 time units
