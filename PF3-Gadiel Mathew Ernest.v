@@ -498,7 +498,7 @@ module ID_EX_pipeline_register( input wire clk,
     begin
         
         if(reset==1 || s == 1) begin
-            //$display("-------------NOP ID/EXE--------------");
+            $display("-------------NOP ID/EXE--------------");
             ex_rf_enable <= 1'b0;
             ex_alu_op <= 4'b0;
             ex_shifter_imm <= 3'b0;
@@ -554,7 +554,7 @@ module EX_MEM_pipeline_register(     input wire clk,
     begin
         
         if(reset==1 || s==1) begin
-            //$display("-------------NOP EXE/MEM--------------");
+            $display("-------------NOP EXE/MEM--------------");
             mem_rf_enable <= 1'b0;
             mem_load_inst <= 1'b0;
             mem_mem_ins_enable <= 1'b0;
@@ -636,7 +636,7 @@ module CUMux (
  always@* begin
         
         if(s==1) begin
-            //$display("-------------NOP ID/EXE--------------");
+            $display("-------------NOP ID/EXE--------------");
             id_rf_enable_mux <= 1'b0;
             id_alu_op_mux <= 4'b0;
             id_shifter_imm_mux <= 3'b0;
@@ -906,10 +906,11 @@ module processor_testbench;
     #3 reset = 0;
 
     // At time 40, set s to 1
-    #35 s = 1; // 40-3 = 37 because we wait for 3 time units before this
+    #37 s = 1; // 40-3 = 37 because we wait for 3 time units before this
 
+    
     // End the simulation at 48 time units from the start
-    #10 $finish; // 48-40 = 8 because we already waited for 40 time units
+    #8 $finish; // 48-40 = 8 because we already waited for 40 time units
 end
 
 // Generate clock with period of 4 units
@@ -919,18 +920,18 @@ always #2 clk = !clk;
     // Display the states of the control signals at each positive edge of the clock
     always @(posedge clk) begin
 
-        $display("\nTime: %t \nPC:%d \nInstruction Fetched: %b \nS: %b", $time,uut.pc_reg_inst.out, uut.instruction_memory_inst.instruction, s);
+        $strobe("\nTime: %t \nPC:%d \nInstruction Fetched: %b \nS: %b", $time,uut.pc_reg_inst.out, uut.instruction_memory_inst.instruction, s);
         
        
         
-        $display("\n| ID Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |", 
+        $strobe("\n| ID Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |", 
                 uut.CUMux_inst.id_rf_enable_mux, uut.CUMux_inst.id_alu_op_mux, uut.CUMux_inst.id_shifter_imm_mux, uut.CUMux_inst.id_load_inst_mux,
                 uut.CUMux_inst.id_mem_ins_enable_mux, uut.CUMux_inst.id_mem_write_mux, uut.CUMux_inst.size_mux, uut.CUMux_inst.id_se_mux,
                 uut.CUMux_inst.id_full_cond_mux, uut.CUMux_inst.id_jalr_sig_mux, uut.CUMux_inst.id_auipc_s_mux,
                 uut.CUMux_inst.id_jal_sig_mux
         );
 
-        $display("\n| EX Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b, Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |",
+        $strobe("\n| EX Signals: RF En %b, ALU Op %b, SOH %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b, Full Cond %b, JALR Sig %b, AUIPC S %b, JAL Sig %b |",
                 uut.ID_EX_pipeline_register_inst.ex_rf_enable, uut.ID_EX_pipeline_register_inst.ex_alu_op, uut.ID_EX_pipeline_register_inst.ex_shifter_imm,
                 uut.ID_EX_pipeline_register_inst.ex_load_inst, uut.ID_EX_pipeline_register_inst.ex_mem_ins_enable,
                 uut.ID_EX_pipeline_register_inst.ex_mem_write, uut.ID_EX_pipeline_register_inst.ex_size, uut.ID_EX_pipeline_register_inst.ex_se,
@@ -938,7 +939,7 @@ always #2 clk = !clk;
                 uut.ID_EX_pipeline_register_inst.ex_auipc_s, uut.ID_EX_pipeline_register_inst.ex_jal_sig,
         );
 
-        $display("\n| MEM Signals: RF En %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b |", 
+        $strobe("\n| MEM Signals: RF En %b, Load Inst %b, Mem Ins En %b, MemWrite %b, Size %b, SE %b |", 
                 uut.EX_MEM_pipeline_register_inst.mem_rf_enable, uut.EX_MEM_pipeline_register_inst.mem_load_inst,
                 uut.EX_MEM_pipeline_register_inst.mem_mem_ins_enable, uut.EX_MEM_pipeline_register_inst.mem_mem_write,
                 uut.EX_MEM_pipeline_register_inst.mem_size, uut.EX_MEM_pipeline_register_inst.mem_se
@@ -946,7 +947,7 @@ always #2 clk = !clk;
 
        // $display("\n testing  ");
 
-        $display("\n| WB Signals: RF En %b |",
+        $strobe("\n| WB Signals: RF En %b |",
                 uut.MEM_WB_pipeline_register_inst.wb_rf_enable
         
         );
