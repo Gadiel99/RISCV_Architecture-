@@ -914,6 +914,7 @@ always #2 clk = !clk;
 
 
     // Display the states of the control signals at each positive edge of the clock
+    //Heres we utilize the $strobe function which makes the output of every cycle.
     always @(posedge clk) begin
 
         $strobe("\nTime: %t \nPC:%d \nInstruction Fetched: %b \nS: %b", $time,uut.pc_reg_inst.out, uut.instruction_memory_inst.instruction, s);
@@ -941,16 +942,15 @@ always #2 clk = !clk;
                 uut.EX_MEM_pipeline_register_inst.mem_size, uut.EX_MEM_pipeline_register_inst.mem_se
         );
 
-       // $display("\n testing  ");
-
-        $strobe("\n| WB Signals: RF En %b |",
+      
+        $monitor("\n| WB Signals: RF En %b |",
                 uut.MEM_WB_pipeline_register_inst.wb_rf_enable
         
         );
 
         
 
-   // end
+   
 end
 
 
