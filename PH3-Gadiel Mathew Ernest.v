@@ -943,7 +943,7 @@ always #2 clk = !clk;
         );
 
       
-        $monitor("\n| WB Signals: RF En %b |",
+        $strobe("\n| WB Signals: RF En %b |",
                 uut.MEM_WB_pipeline_register_inst.wb_rf_enable
         
         );
