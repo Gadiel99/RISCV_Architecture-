@@ -237,6 +237,74 @@ endmodule
 /*--------------------------------------MEM stage modules--------------------------------------*/
 
 //Here goes the data memory module 
+/*****Data Memory Module*****/
+module data_memory(
+    input [8:0] address,
+    input [1:0] size,
+    input rw,
+    input enable,
+    input signed_ext,
+    input [31:0] data_in,
+    output reg[31:0] data_out
+);
+
+    reg [7:0] mem[0:511];
+
+    always @(*) begin
+        //Enable operation
+        if (enable) begin
+
+            //Writing operation
+            if (rw) begin
+
+                case (size)
+                    
+                    //Writing a Byte 
+                    2'b00: begin
+                        mem[address] <= data_in[7:0];
+                    end
+
+                    //Writing a Half-Word
+                    2'b01: begin
+                        mem[address] <= data_in[7:0];
+                        mem[address + 1] <= data_in[15:8];
+                    end 
+                    
+                    //Writing a Word
+                    2'b10: begin
+                        mem[address] <= data_in[7:0];
+                        mem[address + 1] <= data_in[15:8];
+                        mem[address + 2] <= data_in[23:16];
+                        mem[address + 3] <= data_in[31:24];
+                    end
+                endcase
+
+            end else begin
+                
+                //Read Operation
+                 case (size)
+                    2'b00: begin // Read byte
+                        data_out[7:0] = mem[address];
+                        data_out[31:8] = signed_ext && mem[address][7] ? 24'hFFFFFF : 24'h0;
+                    end
+                    2'b01: begin // Read halfword
+                        data_out[15:0] = {mem[address + 1], mem[address]};
+                        data_out[31:16] = signed_ext && mem[address + 1][7] ? 16'hFFFF : 16'h0;
+                    end
+                    2'b10, 2'b11: begin // Read word
+                        data_out = {mem[address+3], mem[address+2], mem[address+1], mem[address]};
+                    end
+                endcase 
+            end 
+        end 
+    end
+
+    // initial begin
+    //     $readmemb("C:/Users/jay20/Documents/proyecto_arqui/Memory/preload.txt", mem);
+    // end
+
+endmodule
+
 // MUX module for data forwarding 
 
 
