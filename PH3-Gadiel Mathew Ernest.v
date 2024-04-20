@@ -7,7 +7,6 @@
 
 
 /*****Instruction Memory Module - ROM*****/
-
 module instruction_memory(
     input [8:0] address, // 9 bits address for the input
     output [31:0] instruction // 32 bits output.
@@ -25,7 +24,8 @@ module instruction_memory(
     assign instruction = {mem[address + 3], mem[address + 2], mem[address + 1], mem[address]};  
 endmodule
 
-//Program Counter module
+
+/*****Program Counter Module*****/
 module pc_reg ( input wire clk,
                 input wire reset,
                 input wire en,
@@ -55,7 +55,7 @@ endmodule
 // endmodule
 
 
-//Control unit module
+/*****Control Unit Module*****/
 module control_unit(input wire [31:0] instruction,
     output reg [3:0] id_alu_op, 
     output reg [2:0] id_shifter_imm,
@@ -388,7 +388,7 @@ module control_unit(input wire [31:0] instruction,
     end
 endmodule
 
-//IF/ID PIPELINE REGISTER
+/*****IF/ID Pipeline Register*****/
 module IF_ID_pipeline_register( output reg [31:0] instruction, ID_PC,
                                 input  clk, reset,IF_ID_LOAD,
                                 input [31:0] ins_mem_out, PC);
@@ -413,7 +413,7 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, ID_PC,
 
 endmodule
 
-//ID/EX PIPELINE REGISTER
+/*****ID/EX Pipeline Register*****/
 module ID_EX_pipeline_register( input wire clk, 
     input wire reset,
     input wire [3:0] id_alu_op_mux, 
@@ -479,8 +479,7 @@ module ID_EX_pipeline_register( input wire clk,
    
 endmodule
 
-//EX/MEM PIPELINE REGISTER
-
+/*****EX/MEM Pipeline Register*****/
 module EX_MEM_pipeline_register(     input wire clk, 
     input wire reset,
     input wire s,
@@ -523,7 +522,7 @@ module EX_MEM_pipeline_register(     input wire clk,
    
 endmodule
 
-//MEM/WB PIPELINE REGISTER
+/*****MEM/WB Pipeline Register*****/
 module MEM_WB_pipeline_register(    
                                     output reg wb_rf_enable,
 
@@ -543,7 +542,8 @@ module MEM_WB_pipeline_register(
     end
    
 endmodule
-// PC Adder
+
+/*****PC adder*****/
 module Adder(
     output reg [31:0] pcplus4,
     input [31:0] pc
@@ -553,7 +553,7 @@ module Adder(
     end
 endmodule
 
-//Control Unit Mux Module
+/*****Control Unit MUX Module*****/
 module CUMux (
     input wire s,
     input wire [3:0] id_alu_op, 
