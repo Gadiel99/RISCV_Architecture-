@@ -41,6 +41,20 @@
            
 */
 
+module mux2x1(
+    input wire [31:0] input0,
+    input wire [31:0] input1,
+    input wire control_signal,
+    output reg [31:0] output_value
+);
+
+always @* begin
+    if (control_signal) output_value <= input1;
+    else output_value <= input0;
+end
+
+endmodule
+
 
 /*--------------------------------------IF stage modules--------------------------------------*/
 
@@ -851,8 +865,13 @@ module processor(
     input wire s
 );
 
+    // ALU Flags
+    wire Z_alu, N_alu, C_alu, V_alu;
+
     // Internal signals
-    wire [31:0] pc_current, pc_next, instruction, id_pc, id_TA, ex_TA, ex_pc, id_PA, id_PB, ex_PA, ex_PB, N, id_pc_next, ex_pc_next;
+    wire [31:0] pc_current, pc_next, instruction, id_pc, id_TA, ex_TA, ex_pc, id_PA, id_PB, ex_PA, ex_PB, N_SOH, id_pc_next,
+     ex_pc_next, mux2x1_alu_input_A_output, alu_output, mux2x1_alu_output_output, mux2x1_ex_TA_output, mux2x1_id_TA_output,
+     mux2x1_if_TA_output;
 
     // imm12_I and imm12_S
     wire [11:0] id_imm12_I, ex_imm12_I, id_imm12_S, ex_imm12_S;
@@ -912,12 +931,17 @@ module processor(
     //s signal for NOP at CU Mux
     //wire s;
 
+    // mux2x1_alu_output_cs
+    wire mux2x1_alu_output_cs = id_jal_sig | ex_jalr_sig;
+
+    wire mux2x1_if_TA_output_cs = id_jal_sig | ex_jalr_sig;
+
     // PC Reg
     pc_reg pc_reg_inst(
         .clk(clk),
         .reset(reset),
         .en(1'b1),
-        .in(pc_next),
+        .in(mux2x1_if_TA_output),
         .out(pc_current)
     );
 
@@ -1000,7 +1024,7 @@ module processor(
         .id_jalr_sig_mux(id_jalr_sig_mux),
         .id_auipc_s_mux(id_auipc_s_mux),
         .id_jal_sig_mux(id_jal_sig_mux),
-        .id_TA(id_Ta),
+        .id_TA(id_TA),
         .id_pc(id_pc),
         .id_PA(id_PA),
         .id_PB(id_PB),
@@ -1030,6 +1054,41 @@ module processor(
         .ex_rd(ex_rd)
     );
 
+    mux2x1 mux2x1_if_TA(
+        .input0(pc_next),
+        .input1(mux2x1_id_TA_output),
+        .control_signal(mux2x1_if_TA_cs),
+        .output_value(mux2x1_if_TA_output)
+    );
+
+    mux2x1 mux2x1_id_TA(
+        .input0(mux2x1_ex_TA_output),
+        .input1(id_TA),
+        .control_signal(id_jal_sig),
+        .output_value(mux2x1_id_TA_output)
+    );
+
+    mux2x1 mux2x1_ex_TA(
+        .input0(ex_TA),
+        .input1(alu_output),
+        .control_signal(ex_jalr_sig),
+        .output_value(mux2x1_ex_TA_output)
+    );
+
+    mux2x1 mux2x1_alu_input_A (
+        .input0(ex_PA),
+        .input1(ex_pc),
+        .control_signal(ex_auipc_s),
+        .output_value(mux2x1_alu_input_A_output)
+    );
+
+    mux2x1 mux2x1_alu_output(
+        .input0(alu_output),
+        .input1(ex_pc_next),
+        .control_signal(mux2x1_alu_output_cs),
+        .output_value(mux2x1_alu_output_output)
+    );
+
     SecondOperandHandler SecondOperandHandler_inst(
          .PB(ex_PB),
          .imm12_I(ex_imm12_I),
@@ -1037,7 +1096,19 @@ module processor(
          .imm20(ex_imm20),
          .PC(ex_pc),
          .S(ex_shifter_imm), 
-         .N(N)
+         .N(N_SOH)
+    );
+
+    ALU ALU_inst(
+        .A(mux2x1_alu_input_A_output),
+        .B(N_SOH),
+        .Op(ex_alu_op),
+        .Out(alu_output),
+        .Z(Z_alu),
+        .N(N_alu),
+        .C(C_alu),
+        .V(V_alu)
+        
     );
 
 
