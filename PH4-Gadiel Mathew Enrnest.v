@@ -133,6 +133,15 @@ module ID_EX_pipeline_register( input wire clk,
     input wire id_jalr_sig_mux,
     input wire id_auipc_s_mux,
     input wire id_jal_sig_mux,
+    input wire [31:0] id_TA,
+    input wire [31:0] id_pc,
+    input wire [31:0] id_PA,
+    input wire [31:0] id_PB,
+    input wire [11:0] id_imm12_I,
+    input wire [11:0] id_imm12_S,
+    input wire [31:0] id_pc_next,
+    input wire [19:0] id_imm20,
+    input wire [4:0] id_rd,
     output reg ex_rf_enable,
     output reg [3:0] ex_alu_op,
     output reg [2:0] ex_shifter_imm,
@@ -144,8 +153,17 @@ module ID_EX_pipeline_register( input wire clk,
     output reg [9:0] ex_full_cond,
     output reg ex_jalr_sig,
     output reg ex_auipc_s,
-    output reg ex_jal_sig
-);
+    output reg ex_jal_sig,
+    output reg [31:0] ex_TA,
+    output reg [31:0] ex_pc,
+    output reg [31:0] ex_PA,
+    output reg [31:0] ex_PB,
+    output reg [11:0] ex_imm12_I,
+    output reg [11:0] ex_imm12_S,
+    output reg [31:0] ex_pc_next,
+    output reg [19:0] ex_imm20,
+    output reg [4:0] ex_rd
+    );
 
     always@(posedge clk)
     begin
@@ -164,7 +182,15 @@ module ID_EX_pipeline_register( input wire clk,
             ex_jalr_sig <= 1'b0;
             ex_auipc_s <= 1'b0;
             ex_jal_sig <= 1'b0;
-
+            ex_TA <= 0;
+            ex_pc <= 0;
+            ex_PA <= 0;
+            ex_PB <= 0;
+            ex_imm12_I <= 0;
+            ex_imm12_S <= 0;
+            ex_pc_next <= 0;
+            ex_imm20 <= 0;
+            ex_rd <= 0;
         end else begin
         //Control Unit signals  
             ex_rf_enable <= id_rf_enable_mux;
@@ -179,6 +205,15 @@ module ID_EX_pipeline_register( input wire clk,
             ex_jalr_sig <= id_jalr_sig_mux;
             ex_auipc_s <= id_auipc_s_mux;
             ex_jal_sig <= id_jal_sig_mux;
+            ex_TA <= id_TA;
+            ex_pc <= id_pc;
+            ex_PA <= id_PA;
+            ex_PB <= id_PB;
+            ex_imm12_I <= id_imm12_I;
+            ex_imm12_S <= id_imm12_S;
+            ex_pc_next <= id_pc_next;
+            ex_imm20 <= id_imm20;
+            ex_rd <= id_rd;
         end
     end
    
@@ -187,14 +222,95 @@ endmodule
 /*--------------------------------------EX stage modules--------------------------------------*/
 
 // Here goes the ALU module
+module ALU(
+    input [31:0] A,
+    input [31:0] B,
+    input [3:0] Op,
+    output reg [31:0] Out,
+    output reg Z,
+    output reg N,
+    output reg C,
+    output reg V
+    );
+    always @ (A, B, Op)
+    begin
+
+        case (Op)
+            4'b0000: Out = B; // Pass through B
+            4'b0001: Out = B + 4; // B + 4
+            4'b0010: begin // A + B
+                {C, Out} = A + B; // Addition with carry out
+                Z = (Out == 0); // Zero flag
+                N = Out[31]; // Negative flag
+    // Overflow flag for addition
+                V = ~(A[31] ^ B[31]) & (A[31] ^ Out[31]);
+            end
+
+            4'b0011: begin // A - B
+                 Out = A - B; 
+              	 C = A < B;
+                 Z = (Out == 0); // Zero flag
+                 N = Out[31]; // Negative flag
+    // Overflow flag for subtraction
+                 V = (A[31] ^ B[31]) & (A[31] ^ Out[31]);
+    
+            end
+
+            4'b0100: Out = (A + B) & 32'hFFFFFFFE; // (A + B) AND with mask for even number
+            4'b0101: Out = A << B[4:0]; // Logical shift left A by the amount specified in the lower 5 bits of B
+            4'b0110: Out = A >> B[4:0]; // Logical shift right A by the amount specified in the lower 5 bits of B
+            4'b0111: Out = $signed(A) >>> B[4:0]; // Arithmetic shift right A by the amount specified in the lower 5 bits of B
+            4'b1000: begin // if (A < B) then Out=1, else Out=0 for signed numbers
+                Out = ($signed(A) < $signed(B)) ? 1 : 0;
+                Z = (Out == 0);
+                N = 0; // Since Out will only be 1 or 0, it's never negative.
+                // V is not relevant for comparison, and there's no need to set it here.
+            end
+
+            4'b1001: begin // Set Out to 1 if A < B for unsigned numbers
+            Out = (A < B) ? 1 : 0;
+            Z = (Out == 0);
+            // N and V are not relevant for unsigned comparison, and C is not applicable here as it's not a subtraction.
+            end
+
+            4'b1010: Out = A & B; // Bitwise AND
+            4'b1011: Out = A | B; // Bitwise OR
+            4'b1100: Out = A ^ B; // Bitwise XOR
+            default: Out = 0; // For unused opcodes or default
+        endcase
+    end
+
+ endmodule
+
 // Here goes the SOH module
+module SecondOperandHandler(
+    input [31:0] PB,
+    input [11:0] imm12_I,
+    input [11:0] imm12_S,
+    input [19:0] imm20,
+    input [31:0] PC,
+    input [2:0] S, 
+    output reg [31:0] N
+);
+  always @(*) begin
+        case(S)
+            3'b000: N = PB;
+            3'b001: N = {{20{imm12_I[11]}}, imm12_I};
+            3'b010: N = {{20{imm12_S[11]}}, imm12_S};
+            3'b011: N = {imm20, 12'b0};
+            3'b100: N = PC;
+            default: N = 32'b0; // For 'not used' cases and default
+        endcase
+    end
+
+endmodule
+
 // Here goes the Condition handler
 // Muxes for the ALU 
 
 /*****EX/MEM Pipeline Register*****/
 module EX_MEM_pipeline_register(     input wire clk, 
     input wire reset,
-    input wire s,
     input wire ex_rf_enable,
     input wire ex_load_inst,
     input wire ex_mem_ins_enable,
@@ -725,5 +841,239 @@ module CUMux (
             id_jal_sig_mux <= id_jal_sig;
         end
     end
+
+endmodule
+
+
+module processor(
+    input wire clk,
+    input wire reset,
+    input wire s
+);
+
+    // Internal signals
+    wire [31:0] pc_current, pc_next, instruction, id_pc, id_TA, ex_TA, ex_pc, id_PA, id_PB, ex_PA, ex_PB, N, id_pc_next, ex_pc_next;
+
+    // imm12_I and imm12_S
+    wire [11:0] id_imm12_I, ex_imm12_I, id_imm12_S, ex_imm12_S;
+
+    // imm20
+    wire [19:0] id_imm20, ex_imm20;
+
+    //alu_op
+    wire [3:0] id_alu_op, ex_alu_op, id_alu_op_mux;
+
+    //shifter_imm
+    wire [2:0] id_shifter_imm, ex_shifter_imm, id_shifter_imm_mux;
+    
+    //rf_enable
+    wire id_rf_enable, ex_rf_enable, mem_rf_enable, wb_rf_enable, id_rf_enable_mux;
+
+    //load_inst
+    wire id_load_inst, ex_load_inst, mem_load_inst, id_load_inst_mux;
+
+    //mem_ins_enable
+    wire id_mem_ins_enable, ex_mem_ins_enable, mem_mem_ins_enable, id_mem_ins_enable_mux;
+
+    //mem_write_enable
+    wire id_mem_write, ex_mem_write, mem_mem_write, id_mem_write_mux;
+
+    //size
+    wire [1:0] size, ex_size, mem_size, size_mux;
+
+    //se
+    wire id_se, ex_se, mem_se, id_se_mux;
+
+    //full_cond
+    wire [9:0] id_full_cond, ex_full_cond, id_full_cond_mux;
+
+    //jalr_sig
+    wire id_jalr_sig, ex_jalr_sig, id_jalr_sig_mux;
+
+    //auipc_s
+    wire id_auipc_s, ex_auipc_s, id_auipc_s_mux;
+    wire id_jal_sig, ex_jal_sig, id_jal_sig_mux;
+
+    //add_sub_sign
+    wire add_sub_sign;
+    
+    //funct3 
+    wire [2:0] func3;
+    
+    //IF_ID_LOAD
+    wire IF_ID_LOAD = 1'b1; // Assuming always enabled for this phase
+    
+    //ins_mem_out 
+    wire [31:0] ins_mem_out;
+
+    //rd
+    wire [4:0] id_rd, ex_rd, mem_rd, wb_rd;
+
+    //s signal for NOP at CU Mux
+    //wire s;
+
+    // PC Reg
+    pc_reg pc_reg_inst(
+        .clk(clk),
+        .reset(reset),
+        .en(1'b1),
+        .in(pc_next),
+        .out(pc_current)
+    );
+
+    // Instruction Memory
+    instruction_memory instruction_memory_inst(
+        .address(pc_current[8:0]),
+        .instruction(instruction)
+    );
+
+    // IF/ID Pipeline Register
+    IF_ID_pipeline_register IF_ID_pipeline_register_inst(
+        .clk(clk),
+        .reset(reset),
+        .IF_ID_LOAD(IF_ID_LOAD),
+        .ins_mem_out(instruction),
+        .PC(pc_current),
+        .instruction(ins_mem_out),
+        .ID_PC(id_pc)
+    );
+
+    // Control Unit
+    control_unit control_unit_inst(
+        .instruction(ins_mem_out),
+        .id_alu_op(id_alu_op),
+        .id_shifter_imm(id_shifter_imm),
+        .id_rf_enable(id_rf_enable),
+        .id_load_inst(id_load_inst),
+        .id_mem_ins_enable(id_mem_ins_enable),
+        .id_mem_write(id_mem_write),
+        .size(size),
+        .id_se(id_se),
+        .id_full_cond(id_full_cond),
+        .id_jalr_sig(id_jalr_sig),
+        .id_auipc_s(id_auipc_s),
+        .id_jal_sig(id_jal_sig),
+        .add_sub_sign(add_sub_sign),
+        .func3(func3)
+    );
+
+    CUMux CUMux_inst(
+        .s(s),
+        .id_alu_op(id_alu_op),
+        .id_shifter_imm(id_shifter_imm),
+        .id_rf_enable(id_rf_enable),
+        .id_load_inst(id_load_inst),
+        .id_mem_ins_enable(id_mem_ins_enable),
+        .id_mem_write(id_mem_write),
+        .size(size),
+        .id_se(id_se),
+        .id_full_cond(id_full_cond),
+        .id_jalr_sig(id_jalr_sig),
+        .id_auipc_s(id_auipc_s),
+        .id_jal_sig(id_jal_sig),
+        .id_rf_enable_mux(id_rf_enable_mux),
+        .id_alu_op_mux(id_alu_op_mux),
+        .id_shifter_imm_mux(id_shifter_imm_mux),
+        .id_load_inst_mux(id_load_inst_mux),
+        .id_mem_ins_enable_mux(id_mem_ins_enable_mux),
+        .id_mem_write_mux(id_mem_write_mux),
+        .size_mux(size_mux),
+        .id_se_mux(id_se_mux),
+        .id_full_cond_mux(id_full_cond_mux),
+        .id_jalr_sig_mux(id_jalr_sig_mux),
+        .id_auipc_s_mux(id_auipc_s_mux),
+        .id_jal_sig_mux(id_jal_sig_mux)
+    );
+    // ID/EX Pipeline Register
+    ID_EX_pipeline_register ID_EX_pipeline_register_inst(
+        .clk(clk),
+        .reset(reset),
+        .id_alu_op_mux(id_alu_op_mux),
+        .id_shifter_imm_mux(id_shifter_imm_mux),
+        .id_rf_enable_mux(id_rf_enable_mux),
+        .id_load_inst_mux(id_load_inst_mux),
+        .id_mem_ins_enable_mux(id_mem_ins_enable_mux),
+        .id_mem_write_mux(id_mem_write_mux),
+        .size_mux(size_mux),
+        .id_se_mux(id_se_mux),
+        .id_full_cond_mux(id_full_cond_mux),
+        .id_jalr_sig_mux(id_jalr_sig_mux),
+        .id_auipc_s_mux(id_auipc_s_mux),
+        .id_jal_sig_mux(id_jal_sig_mux),
+        .id_TA(id_Ta),
+        .id_pc(id_pc),
+        .id_PA(id_PA),
+        .id_PB(id_PB),
+        .id_imm12_I(id_imm12_I),
+        .id_imm12_S(id_imm12_S),
+        .id_pc_next(id_pc_next),
+        .id_rd(id_rd),
+        .ex_rf_enable(ex_rf_enable),
+        .ex_alu_op(ex_alu_op),
+        .ex_shifter_imm(ex_shifter_imm),
+        .ex_load_inst(ex_load_inst),
+        .ex_mem_ins_enable(ex_mem_ins_enable),
+        .ex_mem_write(ex_mem_write),
+        .ex_size(ex_size),
+        .ex_se(ex_se),
+        .ex_full_cond(ex_full_cond),
+        .ex_jalr_sig(ex_jalr_sig),
+        .ex_auipc_s(ex_auipc_s),
+        .ex_jal_sig(ex_jal_sig),
+        .ex_TA(ex_TA),
+        .ex_pc(ex_pc),
+        .ex_PA(ex_PA),
+        .ex_PB(ex_PB),
+        .ex_imm12_I(ex_imm12_I),
+        .ex_imm12_S(ex_imm12_S),
+        .ex_pc_next(ex_pc_next),
+        .ex_rd(ex_rd)
+    );
+
+    SecondOperandHandler SecondOperandHandler_inst(
+         .PB(ex_PB),
+         .imm12_I(ex_imm12_I),
+         .imm12_S(ex_imm12_S),
+         .imm20(ex_imm20),
+         .PC(ex_pc),
+         .S(ex_shifter_imm), 
+         .N(N)
+    );
+
+
+    // EX/MEM Pipeline Register
+    EX_MEM_pipeline_register EX_MEM_pipeline_register_inst(
+        .clk(clk),
+        .reset(reset),      
+        .ex_rf_enable(ex_rf_enable),
+        .ex_load_inst(ex_load_inst),
+        .ex_mem_ins_enable(ex_mem_ins_enable),
+        .ex_mem_write(ex_mem_write),
+        .ex_size(ex_size),
+        .ex_se(ex_se),
+        .mem_rf_enable(mem_rf_enable),
+        .mem_load_inst(mem_load_inst),
+        .mem_mem_ins_enable(mem_mem_ins_enable),
+        .mem_mem_write(mem_mem_write),
+        .mem_size(mem_size),
+        .mem_se(mem_se)
+    );
+
+    // MEM/WB Pipeline Register
+    MEM_WB_pipeline_register MEM_WB_pipeline_register_inst(
+        .clk(clk),
+        .reset(reset),
+        .s(s),
+        .mem_rf_enable(mem_rf_enable),
+        .wb_rf_enable(wb_rf_enable)
+    );
+
+    Adder pc_adder(
+        .pc(pc_current),
+        .pcplus4(pc_next)
+    );
+
+    // Next PC Logic (Placeholder for actual logic)
+    //assign pc_next = pc_current + 4;
 
 endmodule
