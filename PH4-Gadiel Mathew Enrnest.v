@@ -375,12 +375,18 @@ endmodule
 /*****EX/MEM Pipeline Register*****/
 module EX_MEM_pipeline_register(     input wire clk, 
     input wire reset,
+
+    input wire [31:0] ex_PB,
+    input wire [31:0] ex_mux2x1_alu_output_output,
     input wire ex_rf_enable,
     input wire ex_load_inst,
     input wire ex_mem_ins_enable,
     input wire ex_mem_write, 
     input wire [1:0] ex_size,
     input wire ex_se,
+
+    output reg [31:0] mem_PB,
+    output reg [31:0] mem_mux2x1_alu_output_output,
     output reg mem_rf_enable,
     output reg mem_load_inst,
     output reg mem_mem_ins_enable,
@@ -394,6 +400,8 @@ module EX_MEM_pipeline_register(     input wire clk,
         
         if(reset==1) begin
             $display("-------------NOP EXE/MEM--------------");
+            mem_PB <= 32'b0;
+            mem_mux2x1_alu_output_output <= 32'b0;
             mem_rf_enable <= 1'b0;
             mem_load_inst <= 1'b0;
             mem_mem_ins_enable <= 1'b0;
@@ -403,6 +411,8 @@ module EX_MEM_pipeline_register(     input wire clk,
 
         end else begin
         //Control Unit signals  
+            mem_PB <= ex_PB
+            mem_mux2x1_alu_output_output <= ex_mux2x1_alu_output_output;
             mem_rf_enable <= ex_rf_enable;
             mem_load_inst <= ex_load_inst;
             mem_mem_ins_enable <= ex_mem_ins_enable;
@@ -479,30 +489,34 @@ module data_memory(
         end 
     end
 
-    // initial begin
-    //     $readmemb("C:/Users/jay20/Documents/proyecto_arqui/Memory/preload.txt", mem);
-    // end
-
 endmodule
 
 // MUX module for data forwarding 
 
 
+/*--------------------------------------WB stage modules--------------------------------------*/
 /*****MEM/WB Pipeline Register*****/
 module MEM_WB_pipeline_register(    
-                                    output reg wb_rf_enable,
-
-                                    input wire clk, reset, s, mem_rf_enable);
+    
+    input wire clk, reset, s,
+    input wire [31:0] mem_mux2x1_mem_output,
+    input wire rf_enable,
+    output reg [31:0] wb_mem_mux2x1_mem_output,
+    output reg wb_rf_enable
+    
+);
 
     always@(posedge clk)
     begin
         
         if(reset == 1) begin
             $display("-------------NOP MEM/WB--------------");
+            mem_mux2x1_mem_output <= 1'b0;
             wb_rf_enable <= 1'b0;
 
         end else begin
         //Control Unit signals  
+            wb_mem_mux2x1_mem_output <= mem_mux2x1_mem_output
             wb_rf_enable <= mem_rf_enable;
         end
     end
@@ -919,8 +933,8 @@ module processor(
     wire Z_alu, N_alu, C_alu, V_alu;
 
     // Internal signals
-    wire [31:0] pc_current, pc_next, instruction, id_pc, id_TA, ex_TA, ex_pc, id_PA, id_PB, ex_PA, ex_PB, N_SOH, id_pc_next,
-     ex_pc_next, mux2x1_alu_input_A_output, alu_output, mux2x1_alu_output_output, mux2x1_ex_TA_output, mux2x1_id_TA_output,
+    wire [31:0] pc_current, pc_next, instruction, id_pc, id_TA, ex_TA, ex_pc, id_PA, id_PB, ex_PA, ex_PB, mem_PB, N_SOH, id_pc_next,
+     ex_pc_next, mux2x1_alu_input_A_output, alu_output, mem_out, ex_mux2x1_alu_output_output, mem_mux2x1_alu_output_output, mux2x1_ex_TA_output, mux2x1_id_TA_output,
      mux2x1_if_TA_output;
 
     // imm12_I and imm12_S
@@ -1080,25 +1094,31 @@ module processor(
     );
 
     SecondOperandHandler SecondOperandHandler_inst(
-         .PB(ex_PB),
-         .imm12_I(ex_imm12_I),
-         .imm12_S(ex_imm12_S),
-         .imm20(ex_imm20),
-         .PC(ex_pc),
-         .S(ex_shifter_imm), 
-         .N(N_SOH)
+        .PB(ex_PB),
+        .imm12_I(ex_imm12_I),
+        .imm12_S(ex_imm12_S),
+        .imm20(ex_imm20),
+        .PC(ex_pc),
+        .S(ex_shifter_imm), 
+        .N(N_SOH)
     );
 
     // EX/MEM Pipeline Register
     EX_MEM_pipeline_register EX_MEM_pipeline_register_inst(
         .clk(clk),
-        .reset(reset),      
+        .reset(reset),
+
+        .ex_PB(ex_PB),
+        .ex_mux2x1_alu_output_output(ex_mux2x1_alu_output_output),      
         .ex_rf_enable(ex_rf_enable),
         .ex_load_inst(ex_load_inst),
         .ex_mem_ins_enable(ex_mem_ins_enable),
         .ex_mem_write(ex_mem_write),
         .ex_size(ex_size),
         .ex_se(ex_se),
+
+        .mem_PB(mem_PB),
+        .mem_mux2x1_alu_output_output(mem_mux2x1_alu_output_output),
         .mem_rf_enable(mem_rf_enable),
         .mem_load_inst(mem_load_inst),
         .mem_mem_ins_enable(mem_mem_ins_enable),
@@ -1111,7 +1131,22 @@ module processor(
     
     data_memory data_memory_inst(
 
-        .address(), 
+        .address(mem_mux2x1_alu_output_output),
+        .size(mem_size),
+        .rw(mem_write_enable),
+        .enable(mem_ins_enable),
+        .signed_ext(mem_se),
+        .data_in(mem_PB),
+        .data_out(mem_out)
+
+    );
+
+    //Signal Selector Muxes
+    mux2x1 mux2x1_data_memory(
+        .input0(mem_PB),
+        .input1(mem_out),
+        .control_signal(mem_load_inst),
+        .output_value(mux2x1_mem_output)
     );
 
     // MEM/WB Pipeline Register
@@ -1211,7 +1246,7 @@ module processor(
         .input0(alu_output),
         .input1(ex_pc_next),
         .control_signal(mux2x1_alu_output_cs),
-        .output_value(mux2x1_alu_output_output)
+        .output_value(ex_mux2x1_alu_output_output)
     );
 
     
