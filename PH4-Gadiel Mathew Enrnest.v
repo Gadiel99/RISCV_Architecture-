@@ -936,6 +936,8 @@ module processor(
 
     wire mux2x1_if_TA_output_cs = id_jal_sig | ex_jalr_sig;
 
+    /*--------------------------------------IF stage--------------------------------------*/
+
     // PC Reg
     pc_reg pc_reg_inst(
         .clk(clk),
@@ -943,6 +945,12 @@ module processor(
         .en(1'b1),
         .in(mux2x1_if_TA_output),
         .out(pc_current)
+    );
+
+    //Adder for Program COunter
+    Adder pc_adder(
+        .pc(pc_current),
+        .pcplus4(pc_next)
     );
 
     // Instruction Memory
@@ -962,52 +970,7 @@ module processor(
         .ID_PC(id_pc)
     );
 
-    // Control Unit
-    control_unit control_unit_inst(
-        .instruction(ins_mem_out),
-        .id_alu_op(id_alu_op),
-        .id_shifter_imm(id_shifter_imm),
-        .id_rf_enable(id_rf_enable),
-        .id_load_inst(id_load_inst),
-        .id_mem_ins_enable(id_mem_ins_enable),
-        .id_mem_write(id_mem_write),
-        .size(size),
-        .id_se(id_se),
-        .id_full_cond(id_full_cond),
-        .id_jalr_sig(id_jalr_sig),
-        .id_auipc_s(id_auipc_s),
-        .id_jal_sig(id_jal_sig),
-        .add_sub_sign(add_sub_sign),
-        .func3(func3)
-    );
-
-    CUMux CUMux_inst(
-        .s(s),
-        .id_alu_op(id_alu_op),
-        .id_shifter_imm(id_shifter_imm),
-        .id_rf_enable(id_rf_enable),
-        .id_load_inst(id_load_inst),
-        .id_mem_ins_enable(id_mem_ins_enable),
-        .id_mem_write(id_mem_write),
-        .size(size),
-        .id_se(id_se),
-        .id_full_cond(id_full_cond),
-        .id_jalr_sig(id_jalr_sig),
-        .id_auipc_s(id_auipc_s),
-        .id_jal_sig(id_jal_sig),
-        .id_rf_enable_mux(id_rf_enable_mux),
-        .id_alu_op_mux(id_alu_op_mux),
-        .id_shifter_imm_mux(id_shifter_imm_mux),
-        .id_load_inst_mux(id_load_inst_mux),
-        .id_mem_ins_enable_mux(id_mem_ins_enable_mux),
-        .id_mem_write_mux(id_mem_write_mux),
-        .size_mux(size_mux),
-        .id_se_mux(id_se_mux),
-        .id_full_cond_mux(id_full_cond_mux),
-        .id_jalr_sig_mux(id_jalr_sig_mux),
-        .id_auipc_s_mux(id_auipc_s_mux),
-        .id_jal_sig_mux(id_jal_sig_mux)
-    );
+    /*--------------------------------------ID stage--------------------------------------*/
     // ID/EX Pipeline Register
     ID_EX_pipeline_register ID_EX_pipeline_register_inst(
         .clk(clk),
@@ -1054,6 +1017,118 @@ module processor(
         .ex_rd(ex_rd)
     );
 
+    /*--------------------------------------EX stage--------------------------------------*/
+    ALU ALU_inst(
+        .A(mux2x1_alu_input_A_output),
+        .B(N_SOH),
+        .Op(ex_alu_op),
+        .Out(alu_output),
+        .Z(Z_alu),
+        .N(N_alu),
+        .C(C_alu),
+        .V(V_alu)  
+    );
+
+    SecondOperandHandler SecondOperandHandler_inst(
+         .PB(ex_PB),
+         .imm12_I(ex_imm12_I),
+         .imm12_S(ex_imm12_S),
+         .imm20(ex_imm20),
+         .PC(ex_pc),
+         .S(ex_shifter_imm), 
+         .N(N_SOH)
+    );
+
+    // EX/MEM Pipeline Register
+    EX_MEM_pipeline_register EX_MEM_pipeline_register_inst(
+        .clk(clk),
+        .reset(reset),      
+        .ex_rf_enable(ex_rf_enable),
+        .ex_load_inst(ex_load_inst),
+        .ex_mem_ins_enable(ex_mem_ins_enable),
+        .ex_mem_write(ex_mem_write),
+        .ex_size(ex_size),
+        .ex_se(ex_se),
+        .mem_rf_enable(mem_rf_enable),
+        .mem_load_inst(mem_load_inst),
+        .mem_mem_ins_enable(mem_mem_ins_enable),
+        .mem_mem_write(mem_mem_write),
+        .mem_size(mem_size),
+        .mem_se(mem_se)
+    );
+
+    /*--------------------------------------MEM stage--------------------------------------*/
+    
+    data_memory data_memory_inst(
+
+        .address(), 
+    );
+
+    // MEM/WB Pipeline Register
+    
+   
+    
+    MEM_WB_pipeline_register MEM_WB_pipeline_register_inst(
+        .clk(clk),
+        .reset(reset),
+        .s(s),
+        .mem_rf_enable(mem_rf_enable),
+        .wb_rf_enable(wb_rf_enable)
+    );
+
+    
+    
+    
+    
+    // Control Unit
+    control_unit control_unit_inst(
+        .instruction(ins_mem_out),
+        .id_alu_op(id_alu_op),
+        .id_shifter_imm(id_shifter_imm),
+        .id_rf_enable(id_rf_enable),
+        .id_load_inst(id_load_inst),
+        .id_mem_ins_enable(id_mem_ins_enable),
+        .id_mem_write(id_mem_write),
+        .size(size),
+        .id_se(id_se),
+        .id_full_cond(id_full_cond),
+        .id_jalr_sig(id_jalr_sig),
+        .id_auipc_s(id_auipc_s),
+        .id_jal_sig(id_jal_sig),
+        .add_sub_sign(add_sub_sign),
+        .func3(func3)
+    );
+
+    CUMux CUMux_inst(
+        .s(s),
+        .id_alu_op(id_alu_op),
+        .id_shifter_imm(id_shifter_imm),
+        .id_rf_enable(id_rf_enable),
+        .id_load_inst(id_load_inst),
+        .id_mem_ins_enable(id_mem_ins_enable),
+        .id_mem_write(id_mem_write),
+        .size(size),
+        .id_se(id_se),
+        .id_full_cond(id_full_cond),
+        .id_jalr_sig(id_jalr_sig),
+        .id_auipc_s(id_auipc_s),
+        .id_jal_sig(id_jal_sig),
+        .id_rf_enable_mux(id_rf_enable_mux),
+        .id_alu_op_mux(id_alu_op_mux),
+        .id_shifter_imm_mux(id_shifter_imm_mux),
+        .id_load_inst_mux(id_load_inst_mux),
+        .id_mem_ins_enable_mux(id_mem_ins_enable_mux),
+        .id_mem_write_mux(id_mem_write_mux),
+        .size_mux(size_mux),
+        .id_se_mux(id_se_mux),
+        .id_full_cond_mux(id_full_cond_mux),
+        .id_jalr_sig_mux(id_jalr_sig_mux),
+        .id_auipc_s_mux(id_auipc_s_mux),
+        .id_jal_sig_mux(id_jal_sig_mux)
+    );
+
+   
+    //Signal Selector Muxes
     mux2x1 mux2x1_if_TA(
         .input0(pc_next),
         .input1(mux2x1_id_TA_output),
@@ -1089,60 +1164,11 @@ module processor(
         .output_value(mux2x1_alu_output_output)
     );
 
-    SecondOperandHandler SecondOperandHandler_inst(
-         .PB(ex_PB),
-         .imm12_I(ex_imm12_I),
-         .imm12_S(ex_imm12_S),
-         .imm20(ex_imm20),
-         .PC(ex_pc),
-         .S(ex_shifter_imm), 
-         .N(N_SOH)
-    );
+    
 
-    ALU ALU_inst(
-        .A(mux2x1_alu_input_A_output),
-        .B(N_SOH),
-        .Op(ex_alu_op),
-        .Out(alu_output),
-        .Z(Z_alu),
-        .N(N_alu),
-        .C(C_alu),
-        .V(V_alu)
-        
-    );
+    
 
-
-    // EX/MEM Pipeline Register
-    EX_MEM_pipeline_register EX_MEM_pipeline_register_inst(
-        .clk(clk),
-        .reset(reset),      
-        .ex_rf_enable(ex_rf_enable),
-        .ex_load_inst(ex_load_inst),
-        .ex_mem_ins_enable(ex_mem_ins_enable),
-        .ex_mem_write(ex_mem_write),
-        .ex_size(ex_size),
-        .ex_se(ex_se),
-        .mem_rf_enable(mem_rf_enable),
-        .mem_load_inst(mem_load_inst),
-        .mem_mem_ins_enable(mem_mem_ins_enable),
-        .mem_mem_write(mem_mem_write),
-        .mem_size(mem_size),
-        .mem_se(mem_se)
-    );
-
-    // MEM/WB Pipeline Register
-    MEM_WB_pipeline_register MEM_WB_pipeline_register_inst(
-        .clk(clk),
-        .reset(reset),
-        .s(s),
-        .mem_rf_enable(mem_rf_enable),
-        .wb_rf_enable(wb_rf_enable)
-    );
-
-    Adder pc_adder(
-        .pc(pc_current),
-        .pcplus4(pc_next)
-    );
+    
 
     // Next PC Logic (Placeholder for actual logic)
     //assign pc_next = pc_current + 4;
