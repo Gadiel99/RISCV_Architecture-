@@ -233,6 +233,56 @@ module ID_EX_pipeline_register( input wire clk,
    
 endmodule
 
+module RegisterFile(PA, PB, RW, PW, SA, SB, Ld, CLK);
+    input [31:0] PW;
+    input [4:0] SA, SB, RW; // Adjusted to 5 bits to support 32 registers
+    input Ld, CLK;
+    output [31:0] PA, PB;
+    
+    wire [31:0] registers [31:0]; // 32 registers of 32 bits
+    wire [31:0] write_enable;
+    
+    // Binary Decoder - Expanded for 32 registers
+    binaryDecoder decoder(write_enable, RW, Ld);
+
+    // Registers - Instantiation of 32 registers
+    generate
+        genvar i;
+        for (i = 0; i < 32; i = i + 1) begin : reg_block
+            if (i == 0)
+                register r(registers[i], 32'b0, 1'b1, CLK); // Register 0 always 0
+            else
+                register r(registers[i], PW, write_enable[i], CLK);
+        end
+    endgenerate
+
+    // Multiplexers for the output ports
+    Multiplexer32to1 muxA(PA, registers, SA);
+    Multiplexer32to1 muxB(PB, registers, SB);
+endmodule
+
+module binaryDecoder(output reg [31:0] E, input [4:0] D, input Ld);
+    always @(*) begin
+        if(Ld)
+            E = 32'b1 << D; // Desplazamiento para activar el bit correspondiente
+        else
+            E = 32'b0;
+    end
+endmodule
+
+module Multiplexer32to1(output reg [31:0] P, input [31:0] inputs [31:0], input [4:0] S);
+    always @(*) begin
+        P = inputs[S];
+    end
+endmodule
+
+module register(output reg [31:0] Q, input [31:0] PW, input RFLd, input CLK);
+    
+    always @(posedge CLK) begin
+        if(RFLd) Q <= PW; // Load the data into the register when RFLd is asserted
+    end
+endmodule
+
 /*--------------------------------------EX stage modules--------------------------------------*/
 
 // Here goes the ALU module
