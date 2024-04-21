@@ -39,6 +39,7 @@ module pc_reg ( input wire clk,
     end
 endmodule
 
+<<<<<<< HEAD:PH3-Gadiel Mathew Ernest.v
 // // Control unit MUX
 // module control_signals_mux #(
 //     parameter NUM_CONTROL_SIGNALS = 10 // Here goes the quantity of signals
@@ -51,11 +52,97 @@ endmodule
 
 //     // Makes the selection of the output signal.
 //     assign out = s ? in_1 : in_0;
+=======
+module ALU(
+    input [31:0] A,
+    input [31:0] B,
+    input [3:0] Op,
+    output reg [31:0] Out,
+    output reg Z,
+    output reg N,
+    output reg C,
+    output reg V
+    );
+    always @ (A, B, Op)
+    begin
+
+        case (Op)
+            4'b0000: Out = B; // Pass through B
+            4'b0001: Out = B + 4; // B + 4
+            4'b0010: begin // A + B
+                {C, Out} = A + B; // Addition with carry out
+                Z = (Out == 0); // Zero flag
+                N = Out[31]; // Negative flag
+    // Overflow flag for addition
+                V = ~(A[31] ^ B[31]) & (A[31] ^ Out[31]);
+            end
+
+            4'b0011: begin // A - B
+                 Out = A - B; 
+              	 C = A < B;
+                 Z = (Out == 0); // Zero flag
+                 N = Out[31]; // Negative flag
+    // Overflow flag for subtraction
+                 V = (A[31] ^ B[31]) & (A[31] ^ Out[31]);
+    
+            end
+
+            4'b0100: Out = (A + B) & 32'hFFFFFFFE; // (A + B) AND with mask for even number
+            4'b0101: Out = A << B[4:0]; // Logical shift left A by the amount specified in the lower 5 bits of B
+            4'b0110: Out = A >> B[4:0]; // Logical shift right A by the amount specified in the lower 5 bits of B
+            4'b0111: Out = $signed(A) >>> B[4:0]; // Arithmetic shift right A by the amount specified in the lower 5 bits of B
+            4'b1000: begin // if (A < B) then Out=1, else Out=0 for signed numbers
+                Out = ($signed(A) < $signed(B)) ? 1 : 0;
+                Z = (Out == 0);
+                N = 0; // Since Out will only be 1 or 0, it's never negative.
+                // V is not relevant for comparison, and there's no need to set it here.
+            end
+
+            4'b1001: begin // Set Out to 1 if A < B for unsigned numbers
+            Out = (A < B) ? 1 : 0;
+            Z = (Out == 0);
+            // N and V are not relevant for unsigned comparison, and C is not applicable here as it's not a subtraction.
+            end
+
+            4'b1010: Out = A & B; // Bitwise AND
+            4'b1011: Out = A | B; // Bitwise OR
+            4'b1100: Out = A ^ B; // Bitwise XOR
+            default: Out = 0; // For unused opcodes or default
+        endcase
+    end
+
+
+ endmodule
+
+module SecondOperandHandler(
+    input [31:0] PB,
+    input [11:0] imm12_I,
+    input [11:0] imm12_S,
+    input [19:0] imm20,
+    input [31:0] PC,
+    input [2:0] S, 
+    output reg [31:0] N
+);
+  always @(*) begin
+        case(S)
+            3'b000: N = PB;
+            3'b001: N = {{20{imm12_I[11]}}, imm12_I};
+            3'b010: N = {{20{imm12_S[11]}}, imm12_S};
+            3'b011: N = {imm20, 12'b0};
+            3'b100: N = PC;
+            default: N = 32'b0; // For 'not used' cases and default
+        endcase
+    end
+>>>>>>> 85f94553042afb5d723c320975ab493001e2cabe:PF3-Gadiel Mathew Ernest.v
 
 // endmodule
 
+<<<<<<< HEAD:PH3-Gadiel Mathew Ernest.v
 
 /*****Control Unit Module*****/
+=======
+//Control unit module
+>>>>>>> 85f94553042afb5d723c320975ab493001e2cabe:PF3-Gadiel Mathew Ernest.v
 module control_unit(input wire [31:0] instruction,
     output reg [3:0] id_alu_op, 
     output reg [2:0] id_shifter_imm,
