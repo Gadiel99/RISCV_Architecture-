@@ -441,7 +441,7 @@ module EX_MEM_pipeline_register(     input wire clk,
 
         end else begin
         //Control Unit signals  
-            mem_PB <= ex_PB
+            mem_PB <= ex_PB;
             mem_mux2x1_alu_output_output <= ex_mux2x1_alu_output_output;
             mem_rf_enable <= ex_rf_enable;
             mem_load_inst <= ex_load_inst;
@@ -1064,7 +1064,7 @@ module processor(
         .ins_mem_out(instruction),
         .PC(pc_current),
         .instruction(ins_mem_out),
-        .ID_PC(id_pc)
+        .ID_PC(id_pc),
         .id_imm12_S(id_imm12_S),
         .id_imm12_I(id_imm12_I),
         .id_rn(id_rn),
