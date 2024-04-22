@@ -411,7 +411,7 @@ module EX_MEM_pipeline_register(     input wire clk,
 
         end else begin
         //Control Unit signals  
-            mem_PB <= ex_PB
+            mem_PB <= ex_PB;
             mem_mux2x1_alu_output_output <= ex_mux2x1_alu_output_output;
             mem_rf_enable <= ex_rf_enable;
             mem_load_inst <= ex_load_inst;
@@ -498,9 +498,10 @@ endmodule
 /*****MEM/WB Pipeline Register*****/
 module MEM_WB_pipeline_register(    
     
-    input wire clk, reset, s,
+    input wire clk, reset,
+
     input wire [31:0] mem_mux2x1_mem_output,
-    input wire rf_enable,
+    input wire mem_rf_enable,
     output reg [31:0] wb_mem_mux2x1_mem_output,
     output reg wb_rf_enable
     
@@ -511,12 +512,12 @@ module MEM_WB_pipeline_register(
         
         if(reset == 1) begin
             $display("-------------NOP MEM/WB--------------");
-            mem_mux2x1_mem_output <= 1'b0;
+            wb_mem_mux2x1_mem_output <= 0;
             wb_rf_enable <= 1'b0;
 
         end else begin
         //Control Unit signals  
-            wb_mem_mux2x1_mem_output <= mem_mux2x1_mem_output
+            wb_mem_mux2x1_mem_output <= mem_mux2x1_mem_output;
             wb_rf_enable <= mem_rf_enable;
         end
     end
@@ -1143,7 +1144,7 @@ module processor(
 
     //Signal Selector Muxes
     mux2x1 mux2x1_data_memory(
-        .input0(mem_PB),
+        .input0(mem_mux2x1_alu_output_output),
         .input1(mem_out),
         .control_signal(mem_load_inst),
         .output_value(mux2x1_mem_output)
@@ -1156,7 +1157,7 @@ module processor(
     MEM_WB_pipeline_register MEM_WB_pipeline_register_inst(
         .clk(clk),
         .reset(reset),
-        .s(s),
+        
         .mem_rf_enable(mem_rf_enable),
         .wb_rf_enable(wb_rf_enable)
     );
