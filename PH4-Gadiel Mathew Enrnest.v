@@ -1296,7 +1296,14 @@ module processor(
         .control_signal(mux2x1_alu_output_cs),
         .output_value(ex_mux2x1_alu_output_output)
     );
-
+    mux4x1 mux4x1_rf_PA_output(
+            .input0(PA),
+            .input1(ex_mux2x1_alu_output_output),
+            .input2(mux2x1_mem_output),
+            .input3(wb_mux2x1_mem_output),
+            .control_signal(hazard_rf_mux_output),
+            .output_value(id_PA_output)
+        );
     
     mux4x1 mux4x1_rf_PB_output(
         .input0(PB),
