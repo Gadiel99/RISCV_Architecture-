@@ -121,14 +121,14 @@ module instruction_memory(
 endmodule
 
 /*****IF/ID Pipeline Register*****/
-module IF_ID_pipeline_register( output reg [31:0] instruction, ID_PC, id_pcplus4,
+module IF_ID_pipeline_register( output reg [31:0] instruction, id_pc, id_pc_next,
                                 output reg [4:0] id_rn, id_rm,
                                 output reg [11:0] id_imm12_I,
                                 output reg [11:0] id_imm12_S,
                                 output reg [19:0] id_imm20,
                                 output reg [4:0] id_rd,
                                 input  clk, reset, IF_ID_LOAD,
-                                input [31:0] ins_mem_out, PC, pcplus4);
+                                input [31:0] ins_mem_out, PC, pc_next);
 
     always@(posedge clk)
     begin
@@ -137,15 +137,15 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, ID_PC, id_pcplus4
             $display("-------------NOP IF/ID--------------");
             
             instruction <= 32'b0;
-            ID_PC <= 32'b0;
+            id_pc <= 32'b0;
         end 
         else begin
             if (IF_ID_LOAD == 1) begin 
             instruction <= ins_mem_out;
-            ID_PC <= PC;
+            id_pc <= PC;
             id_rn <= instruction[19:15];
             id_rm <= instruction[24:20];
-            id_pcplus4 <= pcplus4; 
+            id_pc_next <= pc_next; 
             id_imm20 <= intruction[31:12];
             id_imm12_I <= instruction[31:20];
             id_imm12_S <= {instruction[31:25], instruction[11:7]};
@@ -1162,7 +1162,7 @@ module processor(
     // Instruction Memory
     instruction_memory instruction_memory_inst(
         .address(pc_current[8:0]),
-        .instruction(instruction)
+        .instruction(ins_mem_out)
     );
 
     // IF/ID Pipeline Register
@@ -1170,17 +1170,17 @@ module processor(
         .clk(clk),
         .reset(reset),
         .IF_ID_LOAD(IF_ID_LOAD),
-        .ins_mem_out(instruction),
+        .ins_mem_out(ins_mem_out),
         .PC(pc_current),
-        .instruction(ins_mem_out),
-        .ID_PC(id_pc),
+        .instruction(instruction),
+        .id_pc(id_pc),
         .id_imm12_S(id_imm12_S),
         .id_imm12_I(id_imm12_I),
         .id_rn(id_rn),
         .id_rm(id_rm),
         .id_imm20(id_imm20),
         .id_rd(id_rd),
-        .id_pcplus4(pcplus4)
+        .id_pc_next(pc_next)
     );
 
     /*--------------------------------------ID stage--------------------------------------*/
@@ -1324,7 +1324,7 @@ module processor(
     
     // Control Unit
     control_unit control_unit_inst(
-        .instruction(ins_mem_out),
+        .instruction(instruction),
         .id_alu_op(id_alu_op),
         .id_shifter_imm(id_shifter_imm),
         .id_rf_enable(id_rf_enable),
