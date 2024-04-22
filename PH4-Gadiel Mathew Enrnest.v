@@ -1298,10 +1298,14 @@ module processor(
     );
 
     
-
-    
-
-    
+    mux4x1 mux4x1_rf_PB_output(
+        .input0(PB),
+        .input1(ex_mux2x1_alu_output_output),
+        .input2(mux2x1_mem_output),
+        .input3(wb_mux2x1_mem_output),
+        .control_signal(hazard_rf_mux_output),
+        .output_value(id_PB_output)
+    );
 
     // Next PC Logic (Placeholder for actual logic)
     //assign pc_next = pc_current + 4;
