@@ -146,7 +146,7 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, id_pc, id_pc_next
             id_rn <= instruction[19:15];
             id_rm <= instruction[24:20];
             id_pc_next <= pc_next; 
-            id_imm20 <= intruction[31:12];
+            id_imm20 <= instruction[31:12];
             id_imm12_I <= instruction[31:20];
             id_imm12_S <= {instruction[31:25], instruction[11:7]};
             id_rd <= instruction[11:7];
@@ -522,7 +522,7 @@ module EX_MEM_pipeline_register(     input wire clk,
     input wire ex_mem_write, 
     input wire [1:0] ex_size,
     input wire ex_se,
-
+    input wire [4:0] ex_rd,
     output reg [31:0] mem_PB,
     output reg [31:0] mem_mux2x1_alu_output_output,
     output reg mem_rf_enable,
@@ -530,7 +530,8 @@ module EX_MEM_pipeline_register(     input wire clk,
     output reg mem_mem_ins_enable,
     output reg mem_mem_write, 
     output reg [1:0] mem_size,
-    output reg mem_se
+    output reg mem_se,
+    output reg [4:0] mem_rd
     );
 
     always@(posedge clk)
@@ -546,6 +547,7 @@ module EX_MEM_pipeline_register(     input wire clk,
             mem_mem_write <= 1'b0;
             mem_size <= 2'b0;
             mem_se <= 1'b0;
+            mem_rd <=0;
 
         end else begin
         //Control Unit signals  
@@ -556,7 +558,8 @@ module EX_MEM_pipeline_register(     input wire clk,
             mem_mem_ins_enable <= ex_mem_ins_enable;
             mem_mem_write <= ex_mem_write;
             mem_size <= ex_size;
-            mem_se <= ex_se;            
+            mem_se <= ex_se;  
+            mem_rd <= ex_rd;          
         end
     end
    
@@ -638,10 +641,12 @@ module MEM_WB_pipeline_register(
     
     input wire clk, reset,
 
-    input wire [31:0] mem_mux2x1_mem_output,
+    input wire [31:0] mux2x1_mem_output,
     input wire mem_rf_enable,
-    output reg [31:0] wb_mem_mux2x1_mem_output,
-    output reg wb_rf_enable
+    input wire [4:0] mem_rd,
+    output reg [31:0] wb_mux2x1_mem_output,
+    output reg wb_rf_enable,
+    output reg [4:0] wb_rd
     
 );
 
@@ -650,13 +655,15 @@ module MEM_WB_pipeline_register(
         
         if(reset == 1) begin
             $display("-------------NOP MEM/WB--------------");
-            wb_mem_mux2x1_mem_output <= 0;
+            wb_mux2x1_mem_output <= 0;
             wb_rf_enable <= 1'b0;
+            wb_rd <= 0;
 
         end else begin
         //Control Unit signals  
-            wb_mem_mux2x1_mem_output <= mem_mux2x1_mem_output;
+            wb_mux2x1_mem_output <= mux2x1_mem_output;
             wb_rf_enable <= mem_rf_enable;
+            wb_rd <= mem_rd;
         end
     end
    
@@ -1074,7 +1081,7 @@ module processor(
     // Internal signals
     wire [31:0] pc_current, pc_next, instruction, id_pc, id_TA, ex_TA, ex_pc, id_PA, id_PB, ex_PA, ex_PB, mem_PB, N_SOH, id_pc_next,
      ex_pc_next, mux2x1_alu_input_A_output, alu_output, mem_out, ex_mux2x1_alu_output_output, mem_mux2x1_alu_output_output, mux2x1_ex_TA_output, mux2x1_id_TA_output,
-     mux2x1_if_TA_output;
+     mux2x1_if_TA_output, mux2x1_mem_output, wb_mux2x1_mem_output;
 
     // imm12_I and imm12_S
     wire [11:0] id_imm12_I, ex_imm12_I, id_imm12_S, ex_imm12_S;
@@ -1202,8 +1209,8 @@ module processor(
         .id_jal_sig_mux(id_jal_sig_mux),
         .id_TA(id_TA),
         .id_pc(id_pc),
-        .id_PA(id_PA),
-        .id_PB(id_PB),
+        .id_PA(id_PA_output),
+        .id_PB(id_PB_output),
         .id_imm12_I(id_imm12_I),
         .id_imm12_S(id_imm12_S),
         .id_pc_next(id_pc_next),
@@ -1235,11 +1242,11 @@ module processor(
         .SA(id_rn),
         .SB(id_rm),
         .RW(wb_rd),
-        .PW(wb_mem_mux2x1_mem_output),
+        .PW(wb_mux2x1_mem_output),
         .CLK(clk),
         .Ld(wb_rf_enable),
-        .PA(PA),
-        .PB(PB)
+        .PA(id_PA),
+        .PB(id_PB)
     );
 
     /*--------------------------------------EX stage--------------------------------------*/
@@ -1277,7 +1284,7 @@ module processor(
         .ex_mem_write(ex_mem_write),
         .ex_size(ex_size),
         .ex_se(ex_se),
-
+        .ex_rd(ex_rd),
         .mem_PB(mem_PB),
         .mem_mux2x1_alu_output_output(mem_mux2x1_alu_output_output),
         .mem_rf_enable(mem_rf_enable),
@@ -1285,7 +1292,8 @@ module processor(
         .mem_mem_ins_enable(mem_mem_ins_enable),
         .mem_mem_write(mem_mem_write),
         .mem_size(mem_size),
-        .mem_se(mem_se)
+        .mem_se(mem_se),
+        .mem_rd(mem_rd)
     );
 
     /*--------------------------------------MEM stage--------------------------------------*/
@@ -1314,11 +1322,12 @@ module processor(
     MEM_WB_pipeline_register MEM_WB_pipeline_register_inst(
         .clk(clk),
         .reset(reset),
-        .s(s),
-        .mem_mux2x1_mem_output(mem_mux2x1_mem_output),
+        .mem_rd(mem_rd),
+        .mux2x1_mem_output(mux2x1_mem_output),
         .mem_rf_enable(mem_rf_enable),
         .wb_rf_enable(wb_rf_enable),
-        .wb_mux2x1_mem_output(wb_mux2x1_mem_output)
+        .wb_mux2x1_mem_output(wb_mux2x1_mem_output),
+        .wb_rd(wb_rd)
     );
 
     
@@ -1406,7 +1415,7 @@ module processor(
         .output_value(ex_mux2x1_alu_output_output)
     );
     mux4x1 mux4x1_rf_PA_output(
-            .input0(PA),
+            .input0(id_PA),
             .input1(ex_mux2x1_alu_output_output),
             .input2(mux2x1_mem_output),
             .input3(wb_mux2x1_mem_output),
@@ -1415,7 +1424,7 @@ module processor(
         );
     
     mux4x1 mux4x1_rf_PB_output(
-        .input0(PB),
+        .input0(id_PB),
         .input1(ex_mux2x1_alu_output_output),
         .input2(mux2x1_mem_output),
         .input3(wb_mux2x1_mem_output),
