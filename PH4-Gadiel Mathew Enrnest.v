@@ -263,53 +263,161 @@ module ID_EX_pipeline_register( input wire clk,
    
 endmodule
 
-module RegisterFile(PA, PB, RW, PW, SA, SB, Ld, CLK);
+module RegisterFile(PA, PB, RW, PW, SA, SB, Ld, CLK,
+                    registers0, registers1, registers2, registers3,
+                    registers4, registers5, registers6, registers7,
+                    registers8, registers9, registers10, registers11,
+                    registers12, registers13, registers14, registers15,
+                    registers16, registers17, registers18, registers19,
+                    registers20, registers21, registers22, registers23,
+                    registers24, registers25, registers26, registers27,
+                    registers28, registers29, registers30, registers31);
     input [31:0] PW;
-    input [4:0] SA, SB, RW; // Adjusted to 5 bits to support 32 registers
+    input [4:0] SA, SB, RW;
     input Ld, CLK;
     output [31:0] PA, PB;
-    
-    wire [31:0] registers [31:0]; // 32 registers of 32 bits
+
+    output [31:0] registers0, registers1, registers2, registers3,
+                   registers4, registers5, registers6, registers7,
+                   registers8, registers9, registers10, registers11,
+                   registers12, registers13, registers14, registers15,
+                   registers16, registers17, registers18, registers19,
+                   registers20, registers21, registers22, registers23,
+                   registers24, registers25, registers26, registers27,
+                   registers28, registers29, registers30, registers31;
+
     wire [31:0] write_enable;
-    
-    // Binary Decoder - Expanded for 32 registers
     binaryDecoder decoder(write_enable, RW, Ld);
 
     // Registers - Instantiation of 32 registers
-    generate
-        genvar i;
-        for (i = 0; i < 32; i = i + 1) begin : reg_block
-            if (i == 0)
-                register r(registers[i], 32'b0, 1'b1, CLK); // Register 0 always 0
-            else
-                register r(registers[i], PW, write_enable[i], CLK);
-        end
-    endgenerate
+    register r0(registers0, 32'b0, 1'b1, CLK); // Register 0 always 0
+    register r1(registers1, PW, write_enable[1], CLK);
+    register r2(registers2, PW, write_enable[2], CLK);
+    register r3(registers3, PW, write_enable[3], CLK);
+    register r4(registers4, PW, write_enable[4], CLK);
+    register r5(registers5, PW, write_enable[5], CLK);
+    register r6(registers6, PW, write_enable[6], CLK);
+    register r7(registers7, PW, write_enable[7], CLK);
+    register r8(registers8, PW, write_enable[8], CLK);
+    register r9(registers9, PW, write_enable[9], CLK);
+    register r10(registers10, PW, write_enable[10], CLK);
+    register r11(registers11, PW, write_enable[11], CLK);
+    register r12(registers12, PW, write_enable[12], CLK);
+    register r13(registers13, PW, write_enable[13], CLK);
+    register r14(registers14, PW, write_enable[14], CLK);
+    register r15(registers15, PW, write_enable[15], CLK);
+    register r16(registers16, PW, write_enable[16], CLK);
+    register r17(registers17, PW, write_enable[17], CLK);
+    register r18(registers18, PW, write_enable[18], CLK);
+    register r19(registers19, PW, write_enable[19], CLK);
+    register r20(registers20, PW, write_enable[20], CLK);
+    register r21(registers21, PW, write_enable[21], CLK);
+    register r22(registers22, PW, write_enable[22], CLK);
+    register r23(registers23, PW, write_enable[23], CLK);
+    register r24(registers24, PW, write_enable[24], CLK);
+    register r25(registers25, PW, write_enable[25], CLK);
+    register r26(registers26, PW, write_enable[26], CLK);
+    register r27(registers27, PW, write_enable[27], CLK);
+    register r28(registers28, PW, write_enable[28], CLK);
+    register r29(registers29, PW, write_enable[29], CLK);
+    register r30(registers30, PW, write_enable[30], CLK);
+    register r31(registers31, PW, write_enable[31], CLK);
 
     // Multiplexers for the output ports
-    Multiplexer32to1 muxA(PA, registers, SA);
-    Multiplexer32to1 muxB(PB, registers, SB);
+    Multiplexer32to1 muxA(
+        PA,
+        registers0, registers1, registers2, registers3,
+        registers4, registers5, registers6, registers7,
+        registers8, registers9, registers10, registers11,
+        registers12, registers13, registers14, registers15,
+        registers16, registers17, registers18, registers19,
+        registers20, registers21, registers22, registers23,
+        registers24, registers25, registers26, registers27,
+        registers28, registers29, registers30, registers31,
+        SA
+    );
+
+    Multiplexer32to1 muxB(
+        PB,
+        registers0, registers1, registers2, registers3,
+        registers4, registers5, registers6, registers7,
+        registers8, registers9, registers10, registers11,
+        registers12, registers13, registers14, registers15,
+        registers16, registers17, registers18, registers19,
+        registers20, registers21, registers22, registers23,
+        registers24, registers25, registers26, registers27,
+        registers28, registers29, registers30, registers31,
+        SB
+    );
+
 endmodule
 
 module binaryDecoder(output reg [31:0] E, input [4:0] D, input Ld);
     always @(*) begin
         if(Ld)
-            E = 32'b1 << D; // Desplazamiento para activar el bit correspondiente
+            E = 32'b1 << D;
         else
             E = 32'b0;
     end
 endmodule
 
-module Multiplexer32to1(output reg [31:0] P, input [31:0] inputs [31:0], input [4:0] S);
+module Multiplexer32to1(
+    output reg [31:0] P,
+    input [31:0] input0, input [31:0] input1, input [31:0] input2, input [31:0] input3,
+    input [31:0] input4, input [31:0] input5, input [31:0] input6, input [31:0] input7,
+    input [31:0] input8, input [31:0] input9, input [31:0] input10, input [31:0] input11,
+    input [31:0] input12, input [31:0] input13, input [31:0] input14, input [31:0] input15,
+    input [31:0] input16, input [31:0] input17, input [31:0] input18, input [31:0] input19,
+    input [31:0] input20, input [31:0] input21, input [31:0] input22, input [31:0] input23,
+    input [31:0] input24, input [31:0] input25, input [31:0] input26, input [31:0] input27,
+    input [31:0] input28, input [31:0] input29, input [31:0] input30, input [31:0] input31,
+    input [4:0] S
+);
+
     always @(*) begin
-        P = inputs[S];
+        case (S)
+            5'd0: P = input0;
+            5'd1: P = input1;
+            5'd2: P = input2;
+            5'd3: P = input3;
+            5'd4: P = input4;
+            5'd5: P = input5;
+            5'd6: P = input6;
+            5'd7: P = input7;
+            5'd8: P = input8;
+            5'd9: P = input9;
+            5'd10: P = input10;
+            5'd11: P = input11;
+            5'd12: P = input12;
+            5'd13: P = input13;
+            5'd14: P = input14;
+            5'd15: P = input15;
+            5'd16: P = input16;
+            5'd17: P = input17;
+            5'd18: P = input18;
+            5'd19: P = input19;
+            5'd20: P = input20;
+            5'd21: P = input21;
+            5'd22: P = input22;
+            5'd23: P = input23;
+            5'd24: P = input24;
+            5'd25: P = input25;
+            5'd26: P = input26;
+            5'd27: P = input27;
+            5'd28: P = input28;
+            5'd29: P = input29;
+            5'd30: P = input30;
+            5'd31: P = input31;
+            default: P = 32'b0;
+        endcase
     end
+
 endmodule
 
 module register(output reg [31:0] Q, input [31:0] PW, input RFLd, input CLK);
-    
     always @(posedge CLK) begin
-        if(RFLd) Q <= PW; // Load the data into the register when RFLd is asserted
+        if(RFLd)
+            Q <= PW; // Load the data into the register when RFLd is asserted
     end
 endmodule
 
@@ -1128,7 +1236,7 @@ module processor(
         .SB(id_rm),
         .RW(wb_rd),
         .PW(wb_mem_mux2x1_mem_output),
-        .clk(clk),
+        .CLK(clk),
         .Ld(wb_rf_enable),
         .PA(PA),
         .PB(PB)
