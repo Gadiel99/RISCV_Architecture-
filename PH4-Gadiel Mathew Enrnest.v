@@ -55,6 +55,24 @@ end
 
 endmodule
 
+module mux4x1(
+    input wire [31:0] input0,
+    input wire [31:0] input1,
+    input wire [31:0] input2,
+    input wire [31:0] input3,
+    input wire [1:0] control_signal,
+    output reg [31:0] output_value
+);
+
+always @* begin
+    if (control_signal == 2'b01) output_value = input1;
+    else if (control_signal == 2'b10) output_value = input2;
+    else if (control_signal == 2'b11) output_value = input3;
+    else output_value = input0; //default case
+end
+
+endmodule
+
 
 /*--------------------------------------IF stage modules--------------------------------------*/
 
@@ -103,10 +121,14 @@ module instruction_memory(
 endmodule
 
 /*****IF/ID Pipeline Register*****/
-module IF_ID_pipeline_register( output reg [31:0] instruction, ID_PC,
+module IF_ID_pipeline_register( output reg [31:0] instruction, ID_PC, id_pcplus4,
                                 output reg [4:0] id_rn, id_rm,
-                                input  clk, reset,IF_ID_LOAD,
-                                input [31:0] ins_mem_out, PC);
+                                output reg [11:0] id_imm12_I,
+                                output reg [11:0] id_imm12_S,
+                                output reg [19:0] id_imm20,
+                                output reg [4:0] id_rd,
+                                input  clk, reset, IF_ID_LOAD,
+                                input [31:0] ins_mem_out, PC, pcplus4);
 
     always@(posedge clk)
     begin
@@ -121,8 +143,13 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, ID_PC,
             if (IF_ID_LOAD == 1) begin 
             instruction <= ins_mem_out;
             ID_PC <= PC;
-            id_rn <= instruction[]
-
+            id_rn <= instruction[19:15];
+            id_rm <= instruction[24:20];
+            id_pcplus4 <= pcplus4; 
+            id_imm20 <= intruction[31:12];
+            id_imm12_I <= instruction[31:20];
+            id_imm12_S <= {instruction[31:25], instruction[11:7]};
+            id_rd <= instruction[11:7];
         end 
     end
         
@@ -963,6 +990,9 @@ module processor(
 
     //mem_write_enable
     wire id_mem_write, ex_mem_write, mem_mem_write, id_mem_write_mux;
+    
+    //rn, rm wires
+    wire [4:0] id_rn, id_rm;
 
     //size
     wire [1:0] size, ex_size, mem_size, size_mux;
@@ -1035,6 +1065,13 @@ module processor(
         .PC(pc_current),
         .instruction(ins_mem_out),
         .ID_PC(id_pc)
+        .id_imm12_S(id_imm12_S),
+        .id_imm12_I(id_imm12_I),
+        .id_rn(id_rn),
+        .id_rm(id_rm),
+        .id_imm20(id_imm20),
+        .id_rd(id_rd),
+        .id_pcplus4(pcplus4)
     );
 
     /*--------------------------------------ID stage--------------------------------------*/
@@ -1086,7 +1123,14 @@ module processor(
 
 
     RegisterFile registerfile_inst(
-        
+        .SA(id_rn),
+        .SB(id_rm),
+        .RW(wb_rd),
+        .PW(wb_mem_mux2x1_mem_output),
+        .clk(clk),
+        .Ld(wb_rf_enable),
+        .PA(PA),
+        .PB(PB)
     );
 
     /*--------------------------------------EX stage--------------------------------------*/
@@ -1257,6 +1301,23 @@ module processor(
         .output_value(ex_mux2x1_alu_output_output)
     );
 
+    mux4x1 mux4x1_PA_output(
+        .input0(PA),
+        .input1(ex_rd),
+        .input2(mem_rd),
+        .input3(PA),
+        .control_signal(hazard_rf_mux_output),
+        .output_value(id_PA)
+    );
+
+    mux4x1 mux4x1_PB_output(
+        .input0(PB),
+        .input1(ex_rd),
+        .input2(mem_rd),
+        .input3(PA),
+        .control_signal(hazard_rf_mux_output),
+        .output_value(id_PB)
+    );
     
 
     
