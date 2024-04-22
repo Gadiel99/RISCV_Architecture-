@@ -104,6 +104,7 @@ endmodule
 
 /*****IF/ID Pipeline Register*****/
 module IF_ID_pipeline_register( output reg [31:0] instruction, ID_PC,
+                                output reg [4:0] id_rn, id_rm,
                                 input  clk, reset,IF_ID_LOAD,
                                 input [31:0] ins_mem_out, PC);
 
@@ -120,6 +121,8 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, ID_PC,
             if (IF_ID_LOAD == 1) begin 
             instruction <= ins_mem_out;
             ID_PC <= PC;
+            id_rn <= instruction[]
+
         end 
     end
         
@@ -1065,6 +1068,11 @@ module processor(
         .ex_imm12_S(ex_imm12_S),
         .ex_pc_next(ex_pc_next),
         .ex_rd(ex_rd)
+    );
+
+
+    RegisterFile registerfile_inst(
+        
     );
 
     /*--------------------------------------EX stage--------------------------------------*/
