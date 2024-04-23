@@ -102,6 +102,36 @@ module Adder(
     end
 endmodule
 
+module SE_12bits(
+    output reg [31:0] id_imm12_I_SE,
+    input [11:0] id_imm12_I
+);
+
+always @(*) begin
+    id_imm12_I_SE = {{20{id_imm12_I[11]}}, id_imm12_I};
+end
+endmodule
+
+module SE_20bits(
+    output reg [31:0] id_imm20_SE,
+    input [19:0] id_imm20
+);
+
+always@(*) begin
+    id_imm20_SE = {{12{id_imm20[19]}}, id_imm20};
+end
+endmodule
+
+module id_Adder (
+    output reg [31:0] id_TA,
+    input [31:0] mux2x1_id_adder_input_output,
+    input [31:0] id_pc
+);
+    always @(*) begin
+        id_TA = mux2x1_id_adder_input_output + id_pc;
+    end
+endmodule
+
 /*****Instruction Memory Module - ROM*****/
 module instruction_memory(
     input [8:0] address, // 9 bits address for the input
@@ -1081,7 +1111,7 @@ module processor(
     // Internal signals
     wire [31:0] pc_current, pc_next, instruction, id_pc, id_TA, ex_TA, ex_pc, id_PA, id_PB, ex_PA, ex_PB, mem_PB, N_SOH, id_pc_next,
      ex_pc_next, mux2x1_alu_input_A_output, alu_output, mem_out, ex_mux2x1_alu_output_output, mem_mux2x1_alu_output_output, mux2x1_ex_TA_output, mux2x1_id_TA_output,
-     mux2x1_if_TA_output, mux2x1_mem_output, wb_mux2x1_mem_output;
+     mux2x1_if_TA_output, mux2x1_mem_output, wb_mux2x1_mem_output, id_imm20_SE, id_imm12_I_SE, mux2x1_id_adder_input_output;
 
     // imm12_I and imm12_S
     wire [11:0] id_imm12_I, ex_imm12_I, id_imm12_S, ex_imm12_S;
@@ -1148,6 +1178,7 @@ module processor(
     wire mux2x1_alu_output_cs = id_jal_sig | ex_jalr_sig;
 
     wire mux2x1_if_TA_output_cs = id_jal_sig | ex_jalr_sig;
+    wire mux2x1_id_adder_input_cs = id_jal_sig | ex_jalr_sig;
 
     /*--------------------------------------IF stage--------------------------------------*/
 
@@ -1247,6 +1278,22 @@ module processor(
         .Ld(wb_rf_enable),
         .PA(id_PA),
         .PB(id_PB)
+    );
+
+    SE_12bits SE_12bits_inst(
+        .id_imm12_I(id_imm12_I),
+        .id_imm12_I_SE(id_imm12_I_SE)
+    );
+
+    SE_20bits SE_20bits_inst(
+        .id_imm20(id_imm20),
+        .id_imm20_SE(id_imm20_SE)
+    );
+
+    id_Adder id_Adder_inst(
+        .mux2x1_id_adder_input_output(mux2x1_id_adder_input_output),
+        .id_pc(id_pc),
+        .id_TA(id_TA)
     );
 
     /*--------------------------------------EX stage--------------------------------------*/
@@ -1392,6 +1439,13 @@ module processor(
         .input1(id_TA),
         .control_signal(id_jal_sig),
         .output_value(mux2x1_id_TA_output)
+    );
+
+    mux2x1 mux2x1_id_adder_input(
+        .input0(id_imm20_SE),
+        .input1(id_imm12_I_SE),
+        .control_signal(mux2x1_id_adder_input_cs),
+        .output_value(mux2x1_id_adder_input_output)
     );
 
     mux2x1 mux2x1_ex_TA(
