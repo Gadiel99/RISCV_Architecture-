@@ -1109,19 +1109,32 @@ module hazard_forwarding_unit(
     //Selectors for forwarding
     output reg [1:0] forwardA,
     output reg [1:0] forwardB,
-    output reg load_stall
+    output reg nop_signal,
+    output reg load_enable,
+    output reg pc_enable
 );
+    reg[1:0] forwardA;
+    reg[1:0] forwardB;
+    reg nop_signal;
+    reg load_enable;
+    reg pc_enable;
 
     always @(*)begin
         
         forwardA = 2'b00;
         forwardB = 2'b00;
-        load_stall = 1'b0;
+        nop_signal = 1'b0;
+        load_enable = 1'b1;
+        pc_enable = 1'b1;
+        nop_signal = 1'b0;
+
 
         //ForwardA for  id_Rn
        if (ex_inst_load && (ex_Rd != 0) && ((id_Rn == ex_Rd) || (id_Rm== ex_Rd))) begin
             // Stall the pipeline if the next instruction needs the result of a memory load
-            load_stall = 1'b1;
+            load_enable = 1'b0;
+            pc_enable = 1'b0;
+            nop_signal = 1'b1;
 
         end else begin
             // Data Forwarding for PA
