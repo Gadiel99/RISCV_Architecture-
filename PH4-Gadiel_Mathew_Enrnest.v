@@ -538,6 +538,37 @@ module SecondOperandHandler(
 endmodule
 
 // Here goes the Condition handler
+module CONDITION_HANDLER(
+    output reg control_hazard_out,
+    input wire Z_flag,
+    input wire N_flag,
+    input wire [9:0] ex_full_cond
+);
+
+always @(*) begin
+    control_hazard_out = 1'b0;
+
+    // Assuming ex_full_cond[2:0] is the funct3 part
+    case (ex_full_cond[2:0])
+        3'b000: // BEQ
+            if (Z_flag == 1'b1) control_hazard_out = 1'b1;
+        3'b001: // BNE
+            if (Z_flag == 1'b0) control_hazard_out = 1'b1;
+        3'b100: // BLT
+            if (N_flag == 1'b1) control_hazard_out = 1'b1;
+        3'b101: // BGE
+            if (N_flag == 1'b0) control_hazard_out = 1'b1;
+        3'b110: // BLTU
+            control_hazard_out = 1'b1; // Assuming unsigned comparison logic
+        3'b111: // BGEU
+            control_hazard_out = 1'b1; // Assuming unsigned comparison logic
+        default:
+            control_hazard_out = 1'b0;
+    endcase
+end
+
+endmodule
+
 // Muxes for the ALU 
 
 /*****EX/MEM Pipeline Register*****/
@@ -1171,13 +1202,16 @@ module processor(
     //rd
     wire [4:0] id_rd, ex_rd, mem_rd, wb_rd;
 
+    // control hazard output
+    wire control_hazard_signal;
+
     //s signal for NOP at CU Mux
     //wire s;
 
     // mux2x1_alu_output_cs
     wire mux2x1_alu_output_cs = id_jal_sig | ex_jalr_sig;
 
-    wire mux2x1_if_TA_output_cs = id_jal_sig | ex_jalr_sig;
+    wire mux2x1_if_TA_output_cs = id_jal_sig | ex_jalr_sig | control_hazard_signal;
     wire mux2x1_id_adder_input_cs = id_jal_sig | ex_jalr_sig;
 
     /*--------------------------------------IF stage--------------------------------------*/
@@ -1318,6 +1352,13 @@ module processor(
         .N(N_SOH)
     );
 
+    CONDITION_HANDLER condition_handler_inst(
+    .control_hazard_out(control_hazard_signal), // This would control branches
+    .Z_flag(Z_alu),  // Zero flag from ALU
+    .N_flag(N_alu),  // Negative flag from ALU
+    .ex_full_cond(ex_full_cond)  // Condition code from ID/EX register
+    );
+
     // EX/MEM Pipeline Register
     EX_MEM_pipeline_register EX_MEM_pipeline_register_inst(
         .clk(clk),
@@ -1430,7 +1471,7 @@ module processor(
     mux2x1 mux2x1_if_TA(
         .input0(pc_next),
         .input1(mux2x1_id_TA_output),
-        .control_signal(mux2x1_if_TA_cs),
+        .control_signal(mux2x1_if_TA_output_cs),
         .output_value(mux2x1_if_TA_output)
     );
 
