@@ -1207,7 +1207,8 @@ module processor(
 
     //s signal for NOP at CU Mux
     //wire s;
-
+    wire id_ex_pipe_reg_reset_signal = ex_jalr_sig | control_hazard_signal;
+     
     // mux2x1_alu_output_cs
     wire mux2x1_alu_output_cs = id_jal_sig | ex_jalr_sig;
 
@@ -1240,7 +1241,7 @@ module processor(
     // IF/ID Pipeline Register
     IF_ID_pipeline_register IF_ID_pipeline_register_inst(
         .clk(clk),
-        .reset(reset),
+        .reset(mux2x1_if_TA_output_cs),
         .IF_ID_LOAD(IF_ID_LOAD),
         .ins_mem_out(ins_mem_out),
         .PC(pc_current),
@@ -1259,7 +1260,7 @@ module processor(
     // ID/EX Pipeline Register
     ID_EX_pipeline_register ID_EX_pipeline_register_inst(
         .clk(clk),
-        .reset(reset),
+        .reset(id_ex_pipe_reg_reset_signal),
         .id_alu_op_mux(id_alu_op_mux),
         .id_shifter_imm_mux(id_shifter_imm_mux),
         .id_rf_enable_mux(id_rf_enable_mux),
