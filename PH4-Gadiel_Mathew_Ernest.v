@@ -157,7 +157,7 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, id_pc, id_pc_next
                                 output reg [11:0] id_imm12_S,
                                 output reg [19:0] id_imm20,
                                 output reg [4:0] id_rd,
-                                input  clk, reset, IF_ID_LOAD,
+                                input  clk, reset, IF_ID_LOAD, LE,
                                 input [31:0] ins_mem_out, PC, pc_next);
 
     always@(posedge clk)
@@ -170,7 +170,7 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, id_pc, id_pc_next
             id_pc <= 32'b0;
         end 
         else begin
-            if (IF_ID_LOAD == 1) begin 
+            if (IF_ID_LOAD == 1 && LE == 1) begin 
             instruction <= ins_mem_out;
             id_pc <= PC;
             id_rn <= instruction[19:15];
@@ -1143,11 +1143,7 @@ module hazard_forwarding_unit(
     output reg load_enable,
     output reg pc_enable
 );
-    reg[1:0] forwardA;
-    reg[1:0] forwardB;
-    reg nop_signal;
-    reg load_enable;
-    reg pc_enable;
+   
 
     always @(*)begin
         
@@ -1160,7 +1156,7 @@ module hazard_forwarding_unit(
 
 
         //ForwardA for  id_Rn
-       if (ex_inst_load && (ex_Rd != 0) && ((id_Rn == ex_Rd) || (id_Rm== ex_Rd))) begin
+       if ((ex_load_inst) && (ex_Rd != 0) && ((id_Rn == ex_Rd) || (id_Rm== ex_Rd))) begin
             // Stall the pipeline if the next instruction needs the result of a memory load
             load_enable = 1'b0;
             pc_enable = 1'b0;
@@ -1199,6 +1195,8 @@ module processor(
     wire [31:0] pc_current, pc_next, instruction, id_pc, id_TA, ex_TA, ex_pc, id_PA, id_PB, ex_PA, ex_PB, mem_PB, N_SOH, id_pc_next,
      ex_pc_next, mux2x1_alu_input_A_output, alu_output, mem_out, ex_mux2x1_alu_output_output, mem_mux2x1_alu_output_output, mux2x1_ex_TA_output, mux2x1_id_TA_output,
      mux2x1_if_TA_output, mux2x1_mem_output, wb_mux2x1_mem_output, id_imm20_SE, id_imm12_I_SE, mux2x1_id_adder_input_output;
+
+    wire pc_enable, load_enable, nop_signal;
 
     // imm12_I and imm12_S
     wire [11:0] id_imm12_I, ex_imm12_I, id_imm12_S, ex_imm12_S;
@@ -1277,7 +1275,7 @@ module processor(
     pc_reg pc_reg_inst(
         .clk(clk),
         .reset(reset),
-        .en(1'b1),
+        .en(pc_enable),
         .in(mux2x1_if_TA_output),
         .out(pc_current)
     );
@@ -1299,6 +1297,7 @@ module processor(
         .clk(clk),
         .reset(mux2x1_if_TA_output_cs),
         .IF_ID_LOAD(IF_ID_LOAD),
+        .LE(load_enable),
         .ins_mem_out(ins_mem_out),
         .PC(pc_current),
         .instruction(instruction),
@@ -1475,7 +1474,7 @@ module processor(
         .wb_rd(wb_rd)
     );
 
-    
+    /*--------------------------------------OUT-OF-Pipeline-SCOP E--------------------------------------*/
     // Control Unit
     control_unit control_unit_inst(
         .instruction(instruction),
@@ -1523,32 +1522,22 @@ module processor(
         .id_jal_sig_mux(id_jal_sig_mux)
     );
 
-    //Hazard/Forward Unit
+    //Hazard Forwarding Unit
     hazard_forwarding_unit hazard_forwarding_unit_inst(
-        // input [4:0] id_Rn, id_Rm,
-        // input [4:0] ex_Rd, mem_Rd, wb_Rd,
-        // input [4:0] id_rs1, id_rs2,
-        // input wire ex_Rf_enable, mem_Rf_enable, wb_Rf_enable,
-        // input wire ex_inst_load,
-
-        // //Selectors for forwarding
-        // output reg [1:0] forwardA,
-        // output reg [1:0] forwardB,
-        // output reg load_stall
-
-        .id_Rn(id_rn)
-        .id_Rm(id_rm)
-        .ex_Rd(ex_rd)
-        .mem_Rd(mem_rd)
-        .wb_Rd(wb_rd)
-        .ex_Rf_enable(ex_rf_enable)
-        .mem_Rf_enable(mem_rf_enable)
-        .wb_Rf_enable(wb_rf_enable)
-        .ex_inst_load(ex_load_inst)
-        .forwardA(id_PA)
-        .forwardB(id_PB)
-        .load_stall(id_
-
+        .id_Rn(id_rn),
+        .id_Rm(id_rm),
+        .ex_Rd(ex_rd),
+        .mem_Rd(mem_rd),
+        .wb_Rd(wb_rd),
+        .ex_Rf_enable(ex_rf_enable),
+        .mem_Rf_enable(mem_rf_enable),
+        .wb_Rf_enable(wb_rf_enable),
+        .ex_load_inst(ex_load_inst),
+        .forwardA(id_PA),
+        .forwardB(id_PB),
+        .nop_signal(nop_signal),
+        .load_enable(load_enable),
+        .pc_enable(pc_enable)
     );
 
    
