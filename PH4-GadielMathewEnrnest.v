@@ -474,7 +474,8 @@ module ALU(
                 {C, Out} = A + B; // Addition with carry out
                 Z = (Out == 0); // Zero flag
                 N = Out[31]; // Negative flag
-    // Overflow flag for addition
+    
+                // Overflow flag for addition
                 V = ~(A[31] ^ B[31]) & (A[31] ^ Out[31]);
             end
 
@@ -483,7 +484,7 @@ module ALU(
               	 C = A < B;
                  Z = (Out == 0); // Zero flag
                  N = Out[31]; // Negative flag
-    // Overflow flag for subtraction
+                // Overflow flag for subtraction
                  V = (A[31] ^ B[31]) & (A[31] ^ Out[31]);
     
             end
@@ -538,6 +539,7 @@ module SecondOperandHandler(
 endmodule
 
 // Here goes the Condition handler
+
 // Muxes for the ALU 
 
 /*****EX/MEM Pipeline Register*****/
@@ -1098,6 +1100,48 @@ module CUMux (
 
 endmodule
 
+module hazard_forwarding_unit(
+    input [4:0] id_Rn, id_Rm,
+    input [4:0] ex_Rd, mem_Rd, wb_Rd,
+    input wire ex_Rf_enable, mem_Rf_enable, wb_Rf_enable,
+    input wire ex_load_inst,
+
+    //Selectors for forwarding
+    output reg [1:0] forwardA,
+    output reg [1:0] forwardB,
+    output reg load_stall
+);
+
+    always @(*)begin
+        
+        forwardA = 2'b00;
+        forwardB = 2'b00;
+        load_stall = 1'b0;
+
+        //ForwardA for  id_Rn
+       if (ex_inst_load && (ex_Rd != 0) && ((id_Rn == ex_Rd) || (id_Rm== ex_Rd))) begin
+            // Stall the pipeline if the next instruction needs the result of a memory load
+            load_stall = 1'b1;
+
+        end else begin
+            // Data Forwarding for PA
+            if (mem_Rf_enable && (mem_Rd != 0) && (id_Rn == mem_Rd)) begin
+                forwardA = 2'b10; // Forward desde MEM a EX
+
+            end else if (wb_Rf_enable && (wb_Rd != 0) && (id_Rn == wb_Rd)) begin
+                forwardA = 2'b01; // Forward desde WB a EX
+            end
+
+            // Data Forwarding for PB
+            if (mem_Rf_enable && (mem_Rd != 0) && (id_Rm == mem_Rd)) begin
+                forwardB = 2'b10; // Forward desde MEM a EX
+
+            end else if (wb_Rf_enable && (wb_Rd != 0) && (id_Rm == wb_Rd)) begin
+                forwardB = 2'b01; // Forward desde WB a EX
+            end
+        end
+    end
+endmodule
 
 module processor(
     input wire clk,
@@ -1347,7 +1391,7 @@ module processor(
     
     data_memory data_memory_inst(
 
-        .address(mem_mux2x1_alu_output_output),
+        .address(mem_mux2x1_alu_output_output[8:0]),
         .size(mem_size),
         .rw(mem_write_enable),
         .enable(mem_ins_enable),
@@ -1423,6 +1467,34 @@ module processor(
         .id_jalr_sig_mux(id_jalr_sig_mux),
         .id_auipc_s_mux(id_auipc_s_mux),
         .id_jal_sig_mux(id_jal_sig_mux)
+    );
+
+    //Hazard/Forward Unit
+    hazard_forwarding_unit hazard_forwarding_unit_inst(
+        // input [4:0] id_Rn, id_Rm,
+        // input [4:0] ex_Rd, mem_Rd, wb_Rd,
+        // input [4:0] id_rs1, id_rs2,
+        // input wire ex_Rf_enable, mem_Rf_enable, wb_Rf_enable,
+        // input wire ex_inst_load,
+
+        // //Selectors for forwarding
+        // output reg [1:0] forwardA,
+        // output reg [1:0] forwardB,
+        // output reg load_stall
+
+        .id_Rn(id_rn)
+        .id_Rm(id_rm)
+        .ex_Rd(ex_rd)
+        .mem_Rd(mem_rd)
+        .wb_Rd(wb_rd)
+        .ex_Rf_enable(ex_rf_enable)
+        .mem_Rf_enable(mem_rf_enable)
+        .wb_Rf_enable(wb_rf_enable)
+        .ex_inst_load(ex_load_inst)
+        .forwardA(id_PA)
+        .forwardB(id_PB)
+        .load_stall(id_
+
     );
 
    
