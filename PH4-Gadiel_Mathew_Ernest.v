@@ -539,7 +539,6 @@ module SecondOperandHandler(
 endmodule
 
 // Here goes the Condition handler
-<<<<<<<< HEAD:PH4-Gadiel_Mathew_Enrnest.v
 module CONDITION_HANDLER(
     output reg control_hazard_out,
     input wire Z_flag,
@@ -570,8 +569,6 @@ always @(*) begin
 end
 
 endmodule
-========
->>>>>>>> Hazard-forward-unit:PH4-Gadiel Mathew Ernest.v
 
 // Muxes for the ALU 
 
