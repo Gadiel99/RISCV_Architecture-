@@ -691,7 +691,9 @@ module data_memory(
             end 
         end 
     end
-
+    initial begin
+        $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/test-code.txt", mem);
+    end
 endmodule
 
 // MUX module for data forwarding 
@@ -1607,8 +1609,5 @@ module processor(
         .control_signal(forwardB_out),
         .output_value(id_PB_output)
     );
-
-    // Next PC Logic (Placeholder for actual logic)
-    //assign pc_next = pc_current + 4;
 
 endmodule
