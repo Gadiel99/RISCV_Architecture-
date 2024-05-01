@@ -1269,6 +1269,10 @@ module processor(
     wire mux2x1_if_TA_output_cs = id_jal_sig | ex_jalr_sig | control_hazard_signal;
     wire mux2x1_id_adder_input_cs = id_jal_sig | ex_jalr_sig;
 
+    // id pa / pb output
+
+    wire [31:0] id_PA_output, id_PB_output;
+
     /*--------------------------------------IF stage--------------------------------------*/
 
     // PC Reg
