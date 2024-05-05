@@ -49,8 +49,8 @@ module mux2x1(
 );
 
 always @* begin
-    if (control_signal) output_value <= input1;
-    else output_value <= input0;
+    if (control_signal) output_value = input1;
+    else output_value = input0;
 end
 
 endmodule
@@ -86,7 +86,7 @@ module pc_reg ( input wire clk,
                 output reg [31:0] out
 );
 
-    always@(posedge clk) begin
+    always@(posedge clk or posedge reset) begin
         if (reset) out <= 32'b0;
         else if (en) out <= in;
     end
@@ -135,19 +135,21 @@ endmodule
 /*****Instruction Memory Module - ROM*****/
 module instruction_memory(
     input [8:0] address, // 9 bits address for the input
-    output [31:0] instruction // 32 bits output.
+    output reg [31:0] instruction // 32 bits output.
     );
 
-    reg [7:0] mem[511:0];
+    reg [7:0] mem[0:511];
     
     //Reading the preload memory
     //If this is not working specified the whole directory of the file.
     initial begin
-      $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/test-code.txt", mem, 0, 511);
+      $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/test-code.txt", mem);
     end 
     
     //Making the arragment for the instruction
-    assign instruction = {mem[address + 3], mem[address + 2], mem[address + 1], mem[address]};  
+    always @(*) begin
+        instruction = {mem[address+3], mem[address+2], mem[address+1], mem[address]};
+    end
 endmodule
 
 /*****IF/ID Pipeline Register*****/
@@ -239,7 +241,7 @@ module ID_EX_pipeline_register( input wire clk,
     output reg [4:0] ex_rd
     );
 
-    always@(posedge clk)
+    always@(posedge clk or posedge reset)
     begin
         
         if(reset==1) begin
@@ -1145,49 +1147,43 @@ module hazard_forwarding_unit(
     output reg load_enable,
     output reg pc_enable
 );
-   
 
-    always @(*)begin
-        
-        forwardA = 2'b00;
-        forwardB = 2'b00;
-        nop_signal = 1'b0;
-        load_enable = 1'b1;
-        pc_enable = 1'b1;
-        nop_signal = 1'b0;
+always @(*) begin
+    // Default values
+    forwardA = 2'b00;
+    forwardB = 2'b00;
+    nop_signal = 1'b0;
+    load_enable = 1'b1;
+    pc_enable = 1'b1;
 
-
-        //ForwardA for  id_Rn
-       if ((ex_load_inst) && (ex_Rd != 0) && ((id_Rn == ex_Rd) || (id_Rm== ex_Rd))) begin
-            // Stall the pipeline if the next instruction needs the result of a memory load
-            load_enable = 1'b0;
-            pc_enable = 1'b0;
-            nop_signal = 1'b1;
-
-        end else begin
-            // Data Forwarding for PA
-            if (mem_Rf_enable && (mem_Rd != 0) && (id_Rn == mem_Rd)) begin
-                forwardA = 2'b10; // Forward desde MEM a EX
-
-            end else if (wb_Rf_enable && (wb_Rd != 0) && (id_Rn == wb_Rd)) begin
-                forwardA = 2'b01; // Forward desde WB a EX
-            end
-
-            // Data Forwarding for PB
-            if (mem_Rf_enable && (mem_Rd != 0) && (id_Rm == mem_Rd)) begin
-                forwardB = 2'b10; // Forward desde MEM a EX
-
-            end else if (wb_Rf_enable && (wb_Rd != 0) && (id_Rm == wb_Rd)) begin
-                forwardB = 2'b01; // Forward desde WB a EX
-            end
-        end
+    // Check for load-use hazard
+    if (ex_load_inst && (ex_Rd != 0) && ((id_Rn == ex_Rd) || (id_Rm == ex_Rd))) begin
+        // Stall the pipeline if the next instruction needs the result of a memory load
+        load_enable = 1'b0;
+        pc_enable = 1'b0;
+        nop_signal = 1'b1;
     end
+
+    // Data Forwarding for PA
+    if (mem_Rf_enable && (mem_Rd != 0) && (id_Rn == mem_Rd)) begin
+        forwardA = 2'b10; // Forward from MEM to EX
+    end else if (wb_Rf_enable && (wb_Rd != 0) && (id_Rn == wb_Rd)) begin
+        forwardA = 2'b01; // Forward from WB to EX
+    end
+
+    // Data Forwarding for PB
+    if (mem_Rf_enable && (mem_Rd != 0) && (id_Rm == mem_Rd)) begin
+        forwardB = 2'b10; // Forward from MEM to EX
+    end else if (wb_Rf_enable && (wb_Rd != 0) && (id_Rm == wb_Rd)) begin
+        forwardB = 2'b01; // Forward from WB to EX
+    end
+end
+
 endmodule
 
 module processor(
     input wire clk,
-    input wire reset,
-    input wire s
+    input wire reset
 );
 
     // ALU Flags
@@ -1417,10 +1413,10 @@ module processor(
     );
 
     CONDITION_HANDLER condition_handler_inst(
-    .control_hazard_out(control_hazard_signal), // This would control branches
-    .Z_flag(Z_alu),  // Zero flag from ALU
-    .N_flag(N_alu),  // Negative flag from ALU
-    .ex_full_cond(ex_full_cond)  // Condition code from ID/EX register
+        .control_hazard_out(control_hazard_signal), // This would control branches
+        .Z_flag(Z_alu),  // Zero flag from ALU
+        .N_flag(N_alu),  // Negative flag from ALU
+        .ex_full_cond(ex_full_cond)  // Condition code from ID/EX register
     );
 
     // EX/MEM Pipeline Register
@@ -1485,7 +1481,7 @@ module processor(
     /*--------------------------------------OUT-OF-Pipeline-SCOPE--------------------------------------*/
     // Control Unit
     control_unit control_unit_inst(
-        .instruction(instruction),
+        .instruction(ins_mem_out),
         .id_alu_op(id_alu_op),
         .id_shifter_imm(id_shifter_imm),
         .id_rf_enable(id_rf_enable),
@@ -1503,7 +1499,7 @@ module processor(
     );
 
     CUMux CUMux_inst(
-        .s(s),
+        .s(nop_signal),
         .id_alu_op(id_alu_op),
         .id_shifter_imm(id_shifter_imm),
         .id_rf_enable(id_rf_enable),
