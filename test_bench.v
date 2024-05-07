@@ -13,26 +13,27 @@ module processor_tb;
     processor uut(
         .clk(clk),
         .reset(reset)
+      
     );
 
-    // Generador de reloj (clock)
+    // Generador de clock
     initial begin
         clk = 0;
-        forever #2 clk = ~clk; // Cambia el estado cada 10 ns
+        forever #2 clk = ~clk; // Cambia el estado cada 2 ns
     end
 
     // Inicialización y simulación
     initial begin
         // Inicializa las señales de control
         reset = 1;
-        #20; // Espera 3 ns para que el reset se propague
+        #20; 
         reset = 0; // Desactiva el reset
         
         #500
         $finish; // Termina la simulación
     end
 
-    // Opcional: Monitoreo de señales importantes
+   //Monitoreo de senales
    initial begin
         $monitor("Time = %t, PC = %d, Instruction = %b, ALU_Out = %h, ID_PA = %d, ID_PB = %d, ID_RD = %d, WB_Output = %d, WB_Rf_Enable = %d",
                  $time,
@@ -49,3 +50,4 @@ module processor_tb;
 
 
 endmodule
+
