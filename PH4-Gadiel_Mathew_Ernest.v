@@ -159,10 +159,10 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, id_pc, id_pc_next
                                 output reg [11:0] id_imm12_S,
                                 output reg [19:0] id_imm20,
                                 output reg [4:0] id_rd,
-                                input  clk, reset, IF_ID_LOAD, LE,
+                                input  clk, reset, LE,
                                 input [31:0] ins_mem_out, PC, pc_next);
 
-    always@(posedge clk)
+    always@(posedge clk )
     begin
 
         if(reset==1 ) begin
@@ -170,18 +170,19 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, id_pc, id_pc_next
             
             instruction <= 32'b0;
             id_pc <= 32'b0;
+            id_pc_next <= 32'b0;
         end 
         else begin
-            if (IF_ID_LOAD == 1 && LE == 1) begin 
-            instruction <= ins_mem_out;
-            id_pc <= PC;
-            id_rn <= instruction[19:15];
-            id_rm <= instruction[24:20];
-            id_pc_next <= pc_next; 
-            id_imm20 <= instruction[31:12];
-            id_imm12_I <= instruction[31:20];
-            id_imm12_S <= {instruction[31:25], instruction[11:7]};
-            id_rd <= instruction[11:7];
+            if (LE == 1) begin 
+                instruction <= ins_mem_out;
+                id_pc <= PC;
+                id_rn <= instruction[19:15];
+                id_rm <= instruction[24:20];
+                id_pc_next <= pc_next; 
+                id_imm20 <= instruction[31:12];
+                id_imm12_I <= instruction[31:20];
+                id_imm12_S <= {instruction[31:25], instruction[11:7]};
+                id_rd <= instruction[11:7];
         end 
     end
         
@@ -466,8 +467,8 @@ module ALU(
     output reg C,
     output reg V
     );
-    always @ (A, B, Op)
-    begin
+    
+    always @ (A, B, Op) begin
 
         case (Op)
             4'b0000: Out = B; // Pass through B
@@ -512,6 +513,7 @@ module ALU(
             4'b1011: Out = A | B; // Bitwise OR
             4'b1100: Out = A ^ B; // Bitwise XOR
             default: Out = 0; // For unused opcodes or default
+
         endcase
     end
 
@@ -549,7 +551,6 @@ module CONDITION_HANDLER(
 );
 
 always @(*) begin
-    control_hazard_out = 1'b0;
 
     // Assuming ex_full_cond[2:0] is the funct3 part
     case (ex_full_cond[2:0])
@@ -1248,7 +1249,7 @@ module processor(
     wire [2:0] func3;
     
     //IF_ID_LOAD
-    wire IF_ID_LOAD = 1'b1; // Assuming always enabled for this phase
+    //wire IF_ID_LOAD = 1'b1; // Assuming always enabled for this phase
     
     //ins_mem_out 
     wire [31:0] ins_mem_out;
@@ -1300,7 +1301,7 @@ module processor(
     IF_ID_pipeline_register IF_ID_pipeline_register_inst(
         .clk(clk),
         .reset(mux2x1_if_TA_output_cs),
-        .IF_ID_LOAD(IF_ID_LOAD),
+        //.IF_ID_LOAD(IF_ID_LOAD),
         .LE(load_enable),
         .ins_mem_out(ins_mem_out),
         .PC(pc_current),
