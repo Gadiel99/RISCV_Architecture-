@@ -39,20 +39,6 @@ module pc_reg ( input wire clk,
     end
 endmodule
 
-<<<<<<< HEAD:PH3-Gadiel Mathew Ernest.v
-// // Control unit MUX
-// module control_signals_mux #(
-//     parameter NUM_CONTROL_SIGNALS = 10 // Here goes the quantity of signals
-// )(
-//     input wire s,                       
-//     input wire [NUM_CONTROL_SIGNALS-1:0] in_0, 
-//     input wire [NUM_CONTROL_SIGNALS-1:0] in_1, 
-//     output wire [NUM_CONTROL_SIGNALS-1:0] out 
-// );
-
-//     // Makes the selection of the output signal.
-//     assign out = s ? in_1 : in_0;
-=======
 module ALU(
     input [31:0] A,
     input [31:0] B,
@@ -133,16 +119,16 @@ module SecondOperandHandler(
             default: N = 32'b0; // For 'not used' cases and default
         endcase
     end
->>>>>>> 85f94553042afb5d723c320975ab493001e2cabe:PF3-Gadiel Mathew Ernest.v
 
-// endmodule
 
-<<<<<<< HEAD:PH3-Gadiel Mathew Ernest.v
+endmodule
+
+
 
 /*****Control Unit Module*****/
-=======
+
 //Control unit module
->>>>>>> 85f94553042afb5d723c320975ab493001e2cabe:PF3-Gadiel Mathew Ernest.v
+
 module control_unit(input wire [31:0] instruction,
     output reg [3:0] id_alu_op, 
     output reg [2:0] id_shifter_imm,
