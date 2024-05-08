@@ -86,9 +86,9 @@ module pc_reg ( input wire clk,
                 output reg [31:0] out
 );
 
-    always@(posedge clk or posedge reset) begin
-        if (reset) out <= 32'b0;
-        else if (en) out <= in;
+    always@(posedge clk or negedge reset) begin
+        if (reset) out = 32'b0;
+        else if (en) out = in;
     end
 endmodule
 
@@ -97,10 +97,11 @@ module Adder(
     output reg [31:0] pcplus4,
     input [31:0] pc
 );
-    always @(*) begin
-        pcplus4 = pc + 4;
+    always @(pc) begin
+        pcplus4 = pc + 32'b100;
     end
 endmodule
+
 
 module SE_12bits(
     output reg [31:0] id_imm12_I_SE,
@@ -162,28 +163,28 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, id_pc, id_pc_next
                                 input  clk, reset, LE,
                                 input [31:0] ins_mem_out, PC, pc_next);
 
-    always@(posedge clk )
+    always@(posedge clk or posedge reset )
     begin
 
-        if(reset==1 ) begin
+        if(reset==1 && LE == 0) begin
             $display("-------------NOP IF/ID--------------");
             
-            instruction <= 32'b0;
-            id_pc <= 32'b0;
-            id_pc_next <= 32'b0;
-        end 
-        else begin
-            if (LE == 1) begin 
-                instruction <= ins_mem_out;
-                id_pc <= PC;
-                id_rn <= instruction[19:15];
-                id_rm <= instruction[24:20];
-                id_pc_next <= pc_next; 
-                id_imm20 <= instruction[31:12];
-                id_imm12_I <= instruction[31:20];
-                id_imm12_S <= {instruction[31:25], instruction[11:7]};
-                id_rd <= instruction[11:7];
-        end 
+            instruction = 32'b0;
+            id_pc = 32'b0;
+            id_pc_next = 32'b0;
+
+        end else begin
+            
+            instruction = ins_mem_out;
+            id_pc = PC;
+            id_rn = instruction[19:15];
+            id_rm = instruction[24:20];
+            id_pc_next = pc_next; 
+            id_imm20 = instruction[31:12];
+            id_imm12_I = instruction[31:20];
+            id_imm12_S = {instruction[31:25], instruction[11:7]};
+            id_rd = instruction[11:7];
+        
     end
         
     end
@@ -247,50 +248,50 @@ module ID_EX_pipeline_register( input wire clk,
         
         if(reset==1) begin
             $display("-------------NOP ID/EXE--------------");
-            ex_rf_enable <= 1'b0;
-            ex_alu_op <= 4'b0;
-            ex_shifter_imm <= 3'b0;
-            ex_load_inst <= 1'b0;
-            ex_mem_ins_enable <= 1'b0;
-            ex_mem_write <= 1'b0;
-            ex_size <= 2'b0;
-            ex_se <= 2'b0;
-            ex_full_cond <= 10'b0;
-            ex_jalr_sig <= 1'b0;
-            ex_auipc_s <= 1'b0;
-            ex_jal_sig <= 1'b0;
-            ex_TA <= 0;
-            ex_pc <= 0;
-            ex_PA <= 0;
-            ex_PB <= 0;
-            ex_imm12_I <= 0;
-            ex_imm12_S <= 0;
-            ex_pc_next <= 0;
-            ex_imm20 <= 0;
-            ex_rd <= 0;
+            ex_rf_enable = 1'b0;
+            ex_alu_op = 4'b0;
+            ex_shifter_imm = 3'b0;
+            ex_load_inst = 1'b0;
+            ex_mem_ins_enable = 1'b0;
+            ex_mem_write = 1'b0;
+            ex_size = 2'b0;
+            ex_se = 2'b0;
+            ex_full_cond = 10'b0;
+            ex_jalr_sig = 1'b0;
+            ex_auipc_s = 1'b0;
+            ex_jal_sig = 1'b0;
+            ex_TA = 0;
+            ex_pc = 0;
+            ex_PA = 0;
+            ex_PB = 0;
+            ex_imm12_I = 0;
+            ex_imm12_S = 0;
+            ex_pc_next = 0;
+            ex_imm20 = 0;
+            ex_rd = 0;
         end else begin
         //Control Unit signals  
-            ex_rf_enable <= id_rf_enable_mux;
-            ex_alu_op <= id_alu_op_mux;
-            ex_shifter_imm <= id_shifter_imm_mux;
-            ex_load_inst <= id_load_inst_mux;
-            ex_mem_ins_enable <= id_mem_ins_enable_mux;
-            ex_mem_write <= id_mem_write_mux;
-            ex_size <= size_mux;
-            ex_se <= id_se_mux;
-            ex_full_cond <= id_full_cond_mux;
-            ex_jalr_sig <= id_jalr_sig_mux;
-            ex_auipc_s <= id_auipc_s_mux;
-            ex_jal_sig <= id_jal_sig_mux;
-            ex_TA <= id_TA;
-            ex_pc <= id_pc;
-            ex_PA <= id_PA;
-            ex_PB <= id_PB;
-            ex_imm12_I <= id_imm12_I;
-            ex_imm12_S <= id_imm12_S;
-            ex_pc_next <= id_pc_next;
-            ex_imm20 <= id_imm20;
-            ex_rd <= id_rd;
+            ex_rf_enable = id_rf_enable_mux;
+            ex_alu_op = id_alu_op_mux;
+            ex_shifter_imm = id_shifter_imm_mux;
+            ex_load_inst = id_load_inst_mux;
+            ex_mem_ins_enable = id_mem_ins_enable_mux;
+            ex_mem_write = id_mem_write_mux;
+            ex_size = size_mux;
+            ex_se = id_se_mux;
+            ex_full_cond = id_full_cond_mux;
+            ex_jalr_sig = id_jalr_sig_mux;
+            ex_auipc_s = id_auipc_s_mux;
+            ex_jal_sig = id_jal_sig_mux;
+            ex_TA = id_TA;
+            ex_pc = id_pc;
+            ex_PA = id_PA;
+            ex_PB = id_PB;
+            ex_imm12_I = id_imm12_I;
+            ex_imm12_S = id_imm12_S;
+            ex_pc_next = id_pc_next;
+            ex_imm20 = id_imm20;
+            ex_rd = id_rd;
         end
     end
    
@@ -450,7 +451,7 @@ endmodule
 module register(output reg [31:0] Q, input [31:0] PW, input RFLd, input CLK);
     always @(posedge CLK) begin
         if(RFLd)
-            Q <= PW; // Load the data into the register when RFLd is asserted
+            Q = PW; // Load the data into the register when RFLd is asserted
     end
 endmodule
 
@@ -604,27 +605,27 @@ module EX_MEM_pipeline_register(     input wire clk,
         
         if(reset==1) begin
             $display("-------------NOP EXE/MEM--------------");
-            mem_PB <= 32'b0;
-            mem_mux2x1_alu_output_output <= 32'b0;
-            mem_rf_enable <= 1'b0;
-            mem_load_inst <= 1'b0;
-            mem_mem_ins_enable <= 1'b0;
-            mem_mem_write <= 1'b0;
-            mem_size <= 2'b0;
-            mem_se <= 1'b0;
-            mem_rd <=0;
+            mem_PB = 32'b0;
+            mem_mux2x1_alu_output_output = 32'b0;
+            mem_rf_enable = 1'b0;
+            mem_load_inst = 1'b0;
+            mem_mem_ins_enable = 1'b0;
+            mem_mem_write = 1'b0;
+            mem_size = 2'b0;
+            mem_se = 1'b0;
+            mem_rd =0;
 
         end else begin
         //Control Unit signals  
-            mem_PB <= ex_PB;
-            mem_mux2x1_alu_output_output <= ex_mux2x1_alu_output_output;
-            mem_rf_enable <= ex_rf_enable;
-            mem_load_inst <= ex_load_inst;
-            mem_mem_ins_enable <= ex_mem_ins_enable;
-            mem_mem_write <= ex_mem_write;
-            mem_size <= ex_size;
-            mem_se <= ex_se;  
-            mem_rd <= ex_rd;          
+            mem_PB = ex_PB;
+            mem_mux2x1_alu_output_output = ex_mux2x1_alu_output_output;
+            mem_rf_enable = ex_rf_enable;
+            mem_load_inst = ex_load_inst;
+            mem_mem_ins_enable = ex_mem_ins_enable;
+            mem_mem_write = ex_mem_write;
+            mem_size = ex_size;
+            mem_se = ex_se;  
+            mem_rd = ex_rd;          
         end
     end
    
@@ -657,21 +658,21 @@ module data_memory(
                     
                     //Writing a Byte 
                     2'b00: begin
-                        mem[address] <= data_in[7:0];
+                        mem[address] = data_in[7:0];
                     end
 
                     //Writing a Half-Word
                     2'b01: begin
-                        mem[address] <= data_in[7:0];
-                        mem[address + 1] <= data_in[15:8];
+                        mem[address] = data_in[7:0];
+                        mem[address + 1] = data_in[15:8];
                     end 
                     
                     //Writing a Word
                     2'b10: begin
-                        mem[address] <= data_in[7:0];
-                        mem[address + 1] <= data_in[15:8];
-                        mem[address + 2] <= data_in[23:16];
-                        mem[address + 3] <= data_in[31:24];
+                        mem[address] = data_in[7:0];
+                        mem[address + 1] = data_in[15:8];
+                        mem[address + 2] = data_in[23:16];
+                        mem[address + 3] = data_in[31:24];
                     end
                 endcase
 
@@ -722,15 +723,15 @@ module MEM_WB_pipeline_register(
         
         if(reset == 1) begin
             $display("-------------NOP MEM/WB--------------");
-            wb_mux2x1_mem_output <= 0;
-            wb_rf_enable <= 1'b0;
-            wb_rd <= 0;
+            wb_mux2x1_mem_output = 0;
+            wb_rf_enable = 1'b0;
+            wb_rd = 0;
 
         end else begin
         //Control Unit signals  
-            wb_mux2x1_mem_output <= mux2x1_mem_output;
-            wb_rf_enable <= mem_rf_enable;
-            wb_rd <= mem_rd;
+            wb_mux2x1_mem_output = mux2x1_mem_output;
+            wb_rf_enable = mem_rf_enable;
+            wb_rd = mem_rd;
         end
     end
    
@@ -979,15 +980,15 @@ module control_unit(input wire [31:0] instruction,
                     id_mem_write = 1;
                     case(func3)
                         3'b000: begin 
-                            size <= 2'b00; // SB instruction
+                            size = 2'b00; // SB instruction
                             $display("SB");
                         end
                         3'b001: begin
-                            size <= 2'b01; // SH instruction
+                            size = 2'b01; // SH instruction
                             $display("SH");
                         end
                         3'b010: begin
-                            size <= 2'b10; // SW instruction
+                            size = 2'b10; // SW instruction
                             $display("SW");
                         end
                     endcase
@@ -997,7 +998,7 @@ module control_unit(input wire [31:0] instruction,
                     // Set control signals for B-Type instruction
                     // If it's a branch instruction, combine the opcode and funct3
 
-                    id_full_cond <= {instruction[6:0], instruction[14:12]};
+                    id_full_cond = {instruction[6:0], instruction[14:12]};
                     id_shifter_imm = 0;
                     case(func3)
 
@@ -1103,33 +1104,33 @@ module CUMux (
         
         if(s==1) begin
             $display("-------------NOP ID/EXE--------------");
-            id_rf_enable_mux <= 1'b0;
-            id_alu_op_mux <= 4'b0;
-            id_shifter_imm_mux <= 3'b0;
-            id_load_inst_mux <= 1'b0;
-            id_mem_ins_enable_mux <= 1'b0;
-            id_mem_write_mux <= 1'b0;
-            size_mux <= 2'b0;
-            id_se_mux <= 2'b0;
-            id_full_cond_mux <= 10'b0;
-            id_jalr_sig_mux <= 1'b0;
-            id_auipc_s_mux <= 1'b0;
-            id_jal_sig_mux <= 1'b0;
+            id_rf_enable_mux = 1'b0;
+            id_alu_op_mux = 4'b0;
+            id_shifter_imm_mux = 3'b0;
+            id_load_inst_mux = 1'b0;
+            id_mem_ins_enable_mux = 1'b0;
+            id_mem_write_mux = 1'b0;
+            size_mux = 2'b0;
+            id_se_mux = 2'b0;
+            id_full_cond_mux = 10'b0;
+            id_jalr_sig_mux = 1'b0;
+            id_auipc_s_mux = 1'b0;
+            id_jal_sig_mux = 1'b0;
 
         end else begin
         //Control Unit signals  
-            id_rf_enable_mux <= id_rf_enable;
-            id_alu_op_mux <= id_alu_op;
-            id_shifter_imm_mux <= id_shifter_imm;
-            id_load_inst_mux <= id_load_inst;
-            id_mem_ins_enable_mux <= id_mem_ins_enable;
-            id_mem_write_mux <= id_mem_write;
-            size_mux <= size;
-            id_se_mux <= id_se;
-            id_full_cond_mux <= id_full_cond;
-            id_jalr_sig_mux <= id_jalr_sig;
-            id_auipc_s_mux <= id_auipc_s;
-            id_jal_sig_mux <= id_jal_sig;
+            id_rf_enable_mux = id_rf_enable;
+            id_alu_op_mux = id_alu_op;
+            id_shifter_imm_mux = id_shifter_imm;
+            id_load_inst_mux = id_load_inst;
+            id_mem_ins_enable_mux = id_mem_ins_enable;
+            id_mem_write_mux = id_mem_write;
+            size_mux = size;
+            id_se_mux = id_se;
+            id_full_cond_mux = id_full_cond;
+            id_jalr_sig_mux = id_jalr_sig;
+            id_auipc_s_mux = id_auipc_s;
+            id_jal_sig_mux = id_jal_sig;
         end
     end
 
@@ -1163,17 +1164,20 @@ always @(*) begin
         load_enable = 1'b0;
         pc_enable = 1'b0;
         nop_signal = 1'b1;
-    end
 
-    // Data Forwarding for PA
-    if (mem_Rf_enable && (mem_Rd != 0) && (id_Rn == mem_Rd)) begin
-        forwardA = 2'b10; // Forward from MEM to EX
+    end else if(ex_Rf_enable && (ex_Rd != 0) && ((id_Rn == ex_Rd))) begin
+        //Forward from EX to ID
+        forwardA = 2'b11;
+    end else if (mem_Rf_enable && (mem_Rd != 0) && (id_Rn == mem_Rd)) begin
+        forwardA = 2'b10; // Forward from MEM to ID
     end else if (wb_Rf_enable && (wb_Rd != 0) && (id_Rn == wb_Rd)) begin
-        forwardA = 2'b01; // Forward from WB to EX
+        forwardA = 2'b01; // Forward from WB to ID
     end
 
     // Data Forwarding for PB
-    if (mem_Rf_enable && (mem_Rd != 0) && (id_Rm == mem_Rd)) begin
+    if(ex_Rf_enable && (ex_Rd != 0) && ((id_Rm == ex_Rd))) begin
+        forwardB = 2'b11;
+    end else if (mem_Rf_enable && (mem_Rd != 0) && (id_Rm == mem_Rd)) begin
         forwardB = 2'b10; // Forward from MEM to EX
     end else if (wb_Rf_enable && (wb_Rd != 0) && (id_Rm == wb_Rd)) begin
         forwardB = 2'b01; // Forward from WB to EX
@@ -1186,6 +1190,7 @@ module processor(
     input wire clk,
     input wire reset
 );
+    
 
     // ALU Flags
     wire Z_alu, N_alu, C_alu, V_alu;
@@ -1301,7 +1306,6 @@ module processor(
     IF_ID_pipeline_register IF_ID_pipeline_register_inst(
         .clk(clk),
         .reset(mux2x1_if_TA_output_cs),
-        //.IF_ID_LOAD(IF_ID_LOAD),
         .LE(load_enable),
         .ins_mem_out(ins_mem_out),
         .PC(pc_current),
@@ -1340,6 +1344,7 @@ module processor(
         .id_imm12_I(id_imm12_I),
         .id_imm12_S(id_imm12_S),
         .id_pc_next(id_pc_next),
+        .id_imm20(id_imm20),
         .id_rd(id_rd),
         .ex_rf_enable(ex_rf_enable),
         .ex_alu_op(ex_alu_op),
@@ -1360,6 +1365,7 @@ module processor(
         .ex_imm12_I(ex_imm12_I),
         .ex_imm12_S(ex_imm12_S),
         .ex_pc_next(ex_pc_next),
+        .ex_imm20(ex_imm20),
         .ex_rd(ex_rd)
     );
 
@@ -1606,5 +1612,4 @@ module processor(
         .control_signal(forwardB_out),
         .output_value(id_PB_output)
     );
-
 endmodule
