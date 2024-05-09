@@ -86,9 +86,9 @@ module pc_reg ( input wire clk,
                 output reg [31:0] out
 );
 
-    always@(posedge clk or negedge reset) begin
-        if (reset) out = 32'b0;
-        else if (en) out = in;
+    always@(posedge clk) begin
+        if (reset) out <= 32'b0;
+        else if (en) out <= in;
     end
 endmodule
 
@@ -97,8 +97,9 @@ module Adder(
     output reg [31:0] pcplus4,
     input [31:0] pc
 );
-    always @(pc) begin
+    always @(*) begin
         pcplus4 = pc + 32'b100;
+        // $display("pcplus4 = %d", pcplus4);
     end
 endmodule
 
@@ -144,7 +145,7 @@ module instruction_memory(
     //Reading the preload memory
     //If this is not working specified the whole directory of the file.
     initial begin
-      $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/test-code.txt", mem);
+      $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/validation_code.txt", mem);
     end 
     
     //Making the arragment for the instruction
@@ -163,29 +164,29 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, id_pc, id_pc_next
                                 input  clk, reset, LE,
                                 input [31:0] ins_mem_out, PC, pc_next);
 
-    always@(posedge clk or posedge reset )
+    always@(posedge clk)
     begin
 
-        if(reset==1 && LE == 0) begin
+        if(reset==1) begin
             $display("-------------NOP IF/ID--------------");
             
-            instruction = 32'b0;
-            id_pc = 32'b0;
-            id_pc_next = 32'b0;
+            instruction <= 32'b0;
+            id_pc <= 32'b0;
+            id_pc_next <= 32'b0;
 
-        end else begin
+        end else if(LE == 1) begin
             
-            instruction = ins_mem_out;
-            id_pc = PC;
-            id_rn = instruction[19:15];
-            id_rm = instruction[24:20];
-            id_pc_next = pc_next; 
-            id_imm20 = instruction[31:12];
-            id_imm12_I = instruction[31:20];
-            id_imm12_S = {instruction[31:25], instruction[11:7]};
-            id_rd = instruction[11:7];
+            instruction <= ins_mem_out;
+            id_pc <= PC;
+            id_rn <= instruction[19:15];
+            id_rm <= instruction[24:20];
+            id_pc_next <= pc_next; 
+            id_imm20 <= instruction[31:12];
+            id_imm12_I <= instruction[31:20];
+            id_imm12_S <= {instruction[31:25], instruction[11:7]};
+            id_rd <= instruction[11:7];
         
-    end
+        end
         
     end
 
@@ -297,21 +298,13 @@ module ID_EX_pipeline_register( input wire clk,
    
 endmodule
 
-module RegisterFile(PA, PB, RW, PW, SA, SB, Ld, CLK,
-                    registers0, registers1, registers2, registers3,
-                    registers4, registers5, registers6, registers7,
-                    registers8, registers9, registers10, registers11,
-                    registers12, registers13, registers14, registers15,
-                    registers16, registers17, registers18, registers19,
-                    registers20, registers21, registers22, registers23,
-                    registers24, registers25, registers26, registers27,
-                    registers28, registers29, registers30, registers31);
+module RegisterFile(PA, PB, RW, PW, SA, SB, Ld, CLK);
     input [31:0] PW;
     input [4:0] SA, SB, RW;
     input Ld, CLK;
     output [31:0] PA, PB;
 
-    output [31:0] registers0, registers1, registers2, registers3,
+    wire [31:0] registers0, registers1, registers2, registers3,
                    registers4, registers5, registers6, registers7,
                    registers8, registers9, registers10, registers11,
                    registers12, registers13, registers14, registers15,
@@ -554,22 +547,26 @@ module CONDITION_HANDLER(
 always @(*) begin
 
     // Assuming ex_full_cond[2:0] is the funct3 part
-    case (ex_full_cond[2:0])
-        3'b000: // BEQ
-            if (Z_flag == 1'b1) control_hazard_out = 1'b1;
-        3'b001: // BNE
-            if (Z_flag == 1'b0) control_hazard_out = 1'b1;
-        3'b100: // BLT
-            if (N_flag == 1'b1) control_hazard_out = 1'b1;
-        3'b101: // BGE
-            if (N_flag == 1'b0) control_hazard_out = 1'b1;
-        3'b110: // BLTU
-            control_hazard_out = 1'b1; // Assuming unsigned comparison logic
-        3'b111: // BGEU
-            control_hazard_out = 1'b1; // Assuming unsigned comparison logic
-        default:
-            control_hazard_out = 1'b0;
-    endcase
+    if(ex_full_cond == 10'b0)begin
+        control_hazard_out = 1'b0;
+    end else begin
+        case (ex_full_cond[2:0])
+            3'b000: // BEQ
+                if (Z_flag == 1'b1) control_hazard_out = 1'b1;
+            3'b001: // BNE
+                if (Z_flag == 1'b0) control_hazard_out = 1'b1;
+            3'b100: // BLT
+                if (N_flag == 1'b1) control_hazard_out = 1'b1;
+            3'b101: // BGE
+                if (N_flag == 1'b0) control_hazard_out = 1'b1;
+            3'b110: // BLTU
+                control_hazard_out = 1'b1; // Assuming unsigned comparison logic
+            3'b111: // BGEU
+                control_hazard_out = 1'b1; // Assuming unsigned comparison logic
+            default:
+                control_hazard_out = 1'b0;
+        endcase
+    end
 end
 
 endmodule
@@ -696,7 +693,7 @@ module data_memory(
         end 
     end
     initial begin
-        $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/test-code.txt", mem);
+        $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/validation_code.txt", mem);
     end
 endmodule
 
@@ -1273,6 +1270,8 @@ module processor(
     wire mux2x1_alu_output_cs = id_jal_sig | ex_jalr_sig;
 
     wire mux2x1_if_TA_output_cs = id_jal_sig | ex_jalr_sig | control_hazard_signal;
+    
+    //wire mux2x1_if_TA_output_cs = 0;
     wire mux2x1_id_adder_input_cs = id_jal_sig | ex_jalr_sig;
 
     // id pa / pb output
@@ -1310,6 +1309,7 @@ module processor(
         .ins_mem_out(ins_mem_out),
         .PC(pc_current),
         .instruction(instruction),
+        .pc_next(pc_next),
         .id_pc(id_pc),
         .id_imm12_S(id_imm12_S),
         .id_imm12_I(id_imm12_I),
@@ -1317,7 +1317,7 @@ module processor(
         .id_rm(id_rm),
         .id_imm20(id_imm20),
         .id_rd(id_rd),
-        .id_pc_next(pc_next)
+        .id_pc_next(id_pc_next)
     );
 
     /*--------------------------------------ID stage--------------------------------------*/
