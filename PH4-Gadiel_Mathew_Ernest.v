@@ -184,7 +184,7 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, id_pc, id_pc_next
             id_imm20 <= ins_mem_out[31:12];
             id_imm12_I <= ins_mem_out[31:20];
             id_imm12_S <= {ins_mem_out[31:25], ins_mem_out[11:7]};
-            id_rd = ins_mem_out[11:7];
+            id_rd <= ins_mem_out[11:7];
         
         end
         
@@ -726,7 +726,7 @@ module MEM_WB_pipeline_register(
 
         end else begin
         //Control Unit signals  
-            wb_mux2x1_mem_output = mux2x1_mem_output;
+            wb_mux2x1_mem_output <= mux2x1_mem_output;
             wb_rf_enable <= mem_rf_enable;
             wb_rd <= mem_rd;
         end
@@ -1199,7 +1199,7 @@ module processor(
 
     wire pc_enable, load_enable, nop_signal;
 
-    wire [1:0] forwarA_out, forwardB_out;
+    wire [1:0] forwardA_out, forwardB_out;
 
     // imm12_I and imm12_S
     wire [11:0] id_imm12_I, ex_imm12_I, id_imm12_S, ex_imm12_S;
@@ -1544,7 +1544,7 @@ module processor(
         .mem_Rf_enable(mem_rf_enable),
         .wb_Rf_enable(wb_rf_enable),
         .ex_load_inst(ex_load_inst),
-        .forwardA(forwarA_out),
+        .forwardA(forwardA_out),
         .forwardB(forwardB_out),
         .nop_signal(nop_signal),
         .load_enable(load_enable),
@@ -1597,18 +1597,18 @@ module processor(
 
     mux4x1 mux4x1_rf_PA_output(
         .input0(id_PA),
-        .input1(ex_mux2x1_alu_output_output),
+        .input1(wb_mux2x1_mem_output),
         .input2(mux2x1_mem_output),
-        .input3(wb_mux2x1_mem_output),
-        .control_signal(forwarA_out),
+        .input3(ex_mux2x1_alu_output_output),
+        .control_signal(forwardA_out),
         .output_value(id_PA_output)
     );
     
     mux4x1 mux4x1_rf_PB_output(
         .input0(id_PB),
-        .input1(ex_mux2x1_alu_output_output),
+        .input1(wb_mux2x1_mem_output),
         .input2(mux2x1_mem_output),
-        .input3(wb_mux2x1_mem_output),
+        .input3(ex_mux2x1_alu_output_output),
         .control_signal(forwardB_out),
         .output_value(id_PB_output)
     );
