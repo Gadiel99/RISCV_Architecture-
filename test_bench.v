@@ -31,17 +31,37 @@ module processor_tb;
     end
     
    //Monitoreo de senales
-   always @(posedge clk) begin
-        $monitor("\n\tTime = %t, \n\tPC = %d, \n\tInstruction = %b, \n\tr1 = %d, \n\tr2 = %d, \n\tr3 = %d, \n\tr5 = %d, \n\tr6 = %d",
-                 $time,
-                 uut.pc_current,
-                 uut.instruction,
-                 uut.registerfile_inst.registers1,
-                 uut.registerfile_inst.registers2,
-                 uut.registerfile_inst.registers3,
-                 uut.registerfile_inst.registers5,
-                 uut.registerfile_inst.registers6,
-                );
+//    always @(posedge clk) begin
+//         $monitor("\n\t \n\tPC = %d, \n\tInstruction = %b, \n\tid_rd = %d, \n\tex_rd = %d, \n\tmem_rd = %d, \n\twb_rd = %d,\n\t  alu_output:%d, \n\tmem_pw = %d, \n\t pw=%d, \n\tid_load_instr:%d ,\n\t ex_load_instr:%d,  \n\t mem_load_instr:%d, \n\t id_alu_op:%b, \n\t ex_alu_op:%b, \n\t alu_a:%d , \n\t alu_b:%d, \n\t soh_pb:%d,\n\t soh_imms:%d, \n\t soh_immi:%d, \n\t soh_imm20:%d, \n\t soh_shifter:%b, \n\t id_imm12_I:%d",
+                 
+//                  uut.pc_current,
+//                  uut.instruction,
+//                  uut.id_rd,
+//                  uut.ex_rd,
+//                  uut.mem_rd,
+//                  uut.wb_rd,
+//                  uut.alu_output,
+//                  uut.mux2x1_mem_output,
+//                  uut.wb_mux2x1_mem_output,
+//                  uut.id_load_inst,
+//                  uut.ex_load_inst,
+//                  uut.mem_load_inst,
+//                  uut.id_alu_op,
+//                  uut.ex_alu_op,
+//                  uut.mux2x1_alu_input_A_output,
+//                  uut.N_SOH,
+//                  uut.ex_PB,
+//                  uut.ex_imm12_I,
+//                  uut.ex_imm12_S,
+//                  uut.ex_imm20,
+//                  uut.ex_shifter_imm,
+//                  uut.id_imm12_I
+//                 );
+always @(posedge clk) begin
+        $monitor("\n\t \n\tPC = %d, \n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d", uut.pc_current,
+        uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
+        uut.registerfile_inst.registers5,uut.registerfile_inst.registers6);
+
 
         // $display("\nTime = %t, \nPC = %d, \nInstruction = %b, \nreset = %b",
         //     $time,

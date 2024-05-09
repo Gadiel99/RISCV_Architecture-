@@ -145,7 +145,7 @@ module instruction_memory(
     //Reading the preload memory
     //If this is not working specified the whole directory of the file.
     initial begin
-      $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/validation_code.txt", mem);
+      $readmemb("C:/Users/Ernest William/Desktop/test-code.txt", mem);
     end 
     
     //Making the arragment for the instruction
@@ -178,13 +178,13 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, id_pc, id_pc_next
             
             instruction <= ins_mem_out;
             id_pc <= PC;
-            id_rn <= instruction[19:15];
-            id_rm <= instruction[24:20];
+            id_rn <= ins_mem_out[19:15];
+            id_rm <= ins_mem_out[24:20];
             id_pc_next <= pc_next; 
-            id_imm20 <= instruction[31:12];
-            id_imm12_I <= instruction[31:20];
-            id_imm12_S <= {instruction[31:25], instruction[11:7]};
-            id_rd <= instruction[11:7];
+            id_imm20 <= ins_mem_out[31:12];
+            id_imm12_I <= ins_mem_out[31:20];
+            id_imm12_S <= {ins_mem_out[31:25], ins_mem_out[11:7]};
+            id_rd = ins_mem_out[11:7];
         
         end
         
@@ -244,65 +244,65 @@ module ID_EX_pipeline_register( input wire clk,
     output reg [4:0] ex_rd
     );
 
-    always@(posedge clk or posedge reset)
+    always@(posedge clk)
     begin
         
         if(reset==1) begin
             $display("-------------NOP ID/EXE--------------");
-            ex_rf_enable = 1'b0;
-            ex_alu_op = 4'b0;
-            ex_shifter_imm = 3'b0;
-            ex_load_inst = 1'b0;
-            ex_mem_ins_enable = 1'b0;
-            ex_mem_write = 1'b0;
-            ex_size = 2'b0;
-            ex_se = 2'b0;
-            ex_full_cond = 10'b0;
-            ex_jalr_sig = 1'b0;
-            ex_auipc_s = 1'b0;
-            ex_jal_sig = 1'b0;
-            ex_TA = 0;
-            ex_pc = 0;
-            ex_PA = 0;
-            ex_PB = 0;
-            ex_imm12_I = 0;
-            ex_imm12_S = 0;
-            ex_pc_next = 0;
-            ex_imm20 = 0;
-            ex_rd = 0;
+            ex_rf_enable <= 1'b0;
+            ex_alu_op <= 4'b0;
+            ex_shifter_imm <= 3'b0;
+            ex_load_inst <= 1'b0;
+            ex_mem_ins_enable <= 1'b0;
+            ex_mem_write <= 1'b0;
+            ex_size <= 2'b0;
+            ex_se <= 2'b0;
+            ex_full_cond <= 10'b0;
+            ex_jalr_sig <= 1'b0;
+            ex_auipc_s <= 1'b0;
+            ex_jal_sig <= 1'b0;
+            ex_TA <= 0;
+            ex_pc <= 0;
+            ex_PA <= 0;
+            ex_PB <= 0;
+            ex_imm12_I <= 0;
+            ex_imm12_S <= 0;
+            ex_pc_next <= 0;
+            ex_imm20 <= 0;
+            ex_rd <= 0;
         end else begin
         //Control Unit signals  
-            ex_rf_enable = id_rf_enable_mux;
-            ex_alu_op = id_alu_op_mux;
-            ex_shifter_imm = id_shifter_imm_mux;
-            ex_load_inst = id_load_inst_mux;
-            ex_mem_ins_enable = id_mem_ins_enable_mux;
-            ex_mem_write = id_mem_write_mux;
-            ex_size = size_mux;
-            ex_se = id_se_mux;
-            ex_full_cond = id_full_cond_mux;
-            ex_jalr_sig = id_jalr_sig_mux;
-            ex_auipc_s = id_auipc_s_mux;
-            ex_jal_sig = id_jal_sig_mux;
-            ex_TA = id_TA;
-            ex_pc = id_pc;
-            ex_PA = id_PA;
-            ex_PB = id_PB;
-            ex_imm12_I = id_imm12_I;
-            ex_imm12_S = id_imm12_S;
-            ex_pc_next = id_pc_next;
-            ex_imm20 = id_imm20;
-            ex_rd = id_rd;
+            ex_rf_enable <= id_rf_enable_mux;
+            ex_alu_op <= id_alu_op_mux;
+            ex_shifter_imm <= id_shifter_imm_mux;
+            ex_load_inst <= id_load_inst_mux;
+            ex_mem_ins_enable <= id_mem_ins_enable_mux;
+            ex_mem_write <= id_mem_write_mux;
+            ex_size <= size_mux;
+            ex_se <= id_se_mux;
+            ex_full_cond <= id_full_cond_mux;
+            ex_jalr_sig <= id_jalr_sig_mux;
+            ex_auipc_s <= id_auipc_s_mux;
+            ex_jal_sig <= id_jal_sig_mux;
+            ex_TA <= id_TA;
+            ex_pc <= id_pc;
+            ex_PA <= id_PA;
+            ex_PB <= id_PB;
+            ex_imm12_I <= id_imm12_I;
+            ex_imm12_S <= id_imm12_S;
+            ex_pc_next <= id_pc_next;
+            ex_imm20 <= id_imm20;
+            ex_rd <= id_rd;
         end
     end
    
 endmodule
 
-module RegisterFile(PA, PB, RW, PW, SA, SB, Ld, CLK);
-    input [31:0] PW;
-    input [4:0] SA, SB, RW;
-    input Ld, CLK;
-    output [31:0] PA, PB;
+module RegisterFile(
+    input [31:0] PW,
+    input [4:0] SA, SB, RW,
+    input Ld, CLK,
+    output [31:0] PA, PB);
 
     wire [31:0] registers0, registers1, registers2, registers3,
                    registers4, registers5, registers6, registers7,
@@ -602,27 +602,27 @@ module EX_MEM_pipeline_register(     input wire clk,
         
         if(reset==1) begin
             $display("-------------NOP EXE/MEM--------------");
-            mem_PB = 32'b0;
-            mem_mux2x1_alu_output_output = 32'b0;
-            mem_rf_enable = 1'b0;
-            mem_load_inst = 1'b0;
-            mem_mem_ins_enable = 1'b0;
-            mem_mem_write = 1'b0;
-            mem_size = 2'b0;
-            mem_se = 1'b0;
-            mem_rd =0;
+            mem_PB <= 32'b0;
+            mem_mux2x1_alu_output_output <= 32'b0;
+            mem_rf_enable <= 1'b0;
+            mem_load_inst <= 1'b0;
+            mem_mem_ins_enable <= 1'b0;
+            mem_mem_write <= 1'b0;
+            mem_size <= 2'b0;
+            mem_se <= 1'b0;
+            mem_rd <=0;
 
         end else begin
         //Control Unit signals  
-            mem_PB = ex_PB;
-            mem_mux2x1_alu_output_output = ex_mux2x1_alu_output_output;
-            mem_rf_enable = ex_rf_enable;
-            mem_load_inst = ex_load_inst;
-            mem_mem_ins_enable = ex_mem_ins_enable;
-            mem_mem_write = ex_mem_write;
-            mem_size = ex_size;
-            mem_se = ex_se;  
-            mem_rd = ex_rd;          
+            mem_PB <= ex_PB;
+            mem_mux2x1_alu_output_output <= ex_mux2x1_alu_output_output;
+            mem_rf_enable <= ex_rf_enable;
+            mem_load_inst <= ex_load_inst;
+            mem_mem_ins_enable <= ex_mem_ins_enable;
+            mem_mem_write <= ex_mem_write;
+            mem_size <= ex_size;
+            mem_se <= ex_se;  
+            mem_rd <= ex_rd;          
         end
     end
    
@@ -693,7 +693,7 @@ module data_memory(
         end 
     end
     initial begin
-        $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/validation_code.txt", mem);
+        $readmemb("C:/Users/Ernest William/Desktop/test-code.txt", mem);
     end
 endmodule
 
@@ -720,15 +720,15 @@ module MEM_WB_pipeline_register(
         
         if(reset == 1) begin
             $display("-------------NOP MEM/WB--------------");
-            wb_mux2x1_mem_output = 0;
-            wb_rf_enable = 1'b0;
-            wb_rd = 0;
+            wb_mux2x1_mem_output <= 0;
+            wb_rf_enable <= 1'b0;
+            wb_rd <= 0;
 
         end else begin
         //Control Unit signals  
             wb_mux2x1_mem_output = mux2x1_mem_output;
-            wb_rf_enable = mem_rf_enable;
-            wb_rd = mem_rd;
+            wb_rf_enable <= mem_rf_enable;
+            wb_rd <= mem_rd;
         end
     end
    
@@ -1488,7 +1488,7 @@ module processor(
     /*--------------------------------------OUT-OF-Pipeline-SCOPE--------------------------------------*/
     // Control Unit
     control_unit control_unit_inst(
-        .instruction(ins_mem_out),
+        .instruction(instruction),
         .id_alu_op(id_alu_op),
         .id_shifter_imm(id_shifter_imm),
         .id_rf_enable(id_rf_enable),
