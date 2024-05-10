@@ -145,7 +145,7 @@ module instruction_memory(
     //Reading the preload memory
     //If this is not working specified the whole directory of the file.
     initial begin
-      $readmemb("C:/Users/Ernest William/Desktop/test-code.txt", mem);
+      $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/validation_code.txt", mem);
     end 
     
     //Making the arragment for the instruction
@@ -693,7 +693,7 @@ module data_memory(
         end 
     end
     initial begin
-        $readmemb("C:/Users/Ernest William/Desktop/test-code.txt", mem);
+        $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/validation_code.txt", mem);
     end
 endmodule
 
@@ -1457,8 +1457,8 @@ module processor(
 
         .address(mem_mux2x1_alu_output_output[8:0]),
         .size(mem_size),
-        .rw(mem_write_enable),
-        .enable(mem_ins_enable),
+        .rw(mem_mem_write),
+        .enable(mem_mem_ins_enable),
         .signed_ext(mem_se),
         .data_in(mem_PB),
         .data_out(mem_out)
