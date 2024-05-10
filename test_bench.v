@@ -27,7 +27,7 @@ module processor_tb;
     initial begin
         #3 reset = 0; // Desactiva el reset
         
-        #50$finish; // Termina la simulación
+        #100$finish; // Termina la simulación
     end
     
    //Monitoreo de senales
@@ -58,18 +58,36 @@ module processor_tb;
 //                  uut.id_imm12_I
 //                 );
 always @(posedge clk) begin
-        $monitor("\n\t \n\tPC = %d, \n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d,\n\t mux2x1_alu_input_A_output:%d,\n\t SOH_out:%d:,\n\talu_op:%b, \n\t alu_out:%d,\n\t id_load=%d, \n\t ex_load=%d, \n\t mem_load=%d,\n\tmem_out:%d,\n\tmem_alu_out:%d", uut.pc_current,
-        uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
-        uut.registerfile_inst.registers5,uut.registerfile_inst.registers6,
-        uut.mux2x1_alu_input_A_output,
-        uut.N_SOH,
-        uut.ex_alu_op,
-        uut.alu_output,
-        uut.id_load_inst_mux,
-        uut.ex_load_inst,
-        uut.mem_load_inst,
-        uut.mem_out,
-        uut.mem_mux2x1_alu_output_output);
+
+    // $monitor("\n\tTime = %d, \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d", $time, uut.pc_current, uut.instruction,
+    //     uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
+    //     uut.registerfile_inst.registers5,uut.registerfile_inst.registers6,
+    // );
+    // $monitor("\n\t \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d,\n\t mux2x1_alu_input_A_output:%d,\n\t SOH_out:%d:,\n\talu_op:%b, \n\t alu_out:%d,\n\t id_load=%d, \n\t ex_load=%d, \n\t mem_load=%d,\n\tmem_out:%d,\n\tmem_alu_out:%d,\n\tex_alu_out = %d\n\tdata mux input 0 = %b,\n\tdata mux input 1 = %b,\n\tdata mux control signal = %b,\n\tdata mux output value= %b", uut.pc_current, uut.instruction,
+        // uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
+        // uut.registerfile_inst.registers5,uut.registerfile_inst.registers6,
+        // uut.mux2x1_alu_input_A_output,
+        // uut.N_SOH,
+        // uut.ex_alu_op,
+        // uut.alu_output,
+        // uut.id_load_inst_mux,
+        // uut.ex_load_inst,
+        // uut.mem_load_inst,
+        // uut.mem_out,
+        // uut.mem_mux2x1_alu_output_output,
+        // uut.ex_mux2x1_alu_output_output,
+        // uut.mux2x1_data_memory.input0,
+        // uut.mux2x1_data_memory.input1,
+        // uut.mux2x1_data_memory.control_signal,
+        // uut.mux2x1_data_memory.output_value
+        // );
+
+        // $monitor("\tPC = %d,\n\t id_rw = %b,\n\tex_rw = %b,\n\tmem_rw = %b",
+        //       uut.pc_current,
+        //       uut.id_mem_ins_enable,
+        //       uut.ex_mem_ins_enable,
+        //       uut.mem_mem_ins_enable
+        // );
         
 
         // $display("\nTime = %t, \nPC = %d, \nInstruction = %b, \nreset = %b",
