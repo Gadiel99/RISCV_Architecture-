@@ -751,6 +751,7 @@ module control_unit(input wire [31:0] instruction,
     output reg id_auipc_s,
     output reg id_jal_sig,
     output reg add_sub_sign,
+    output reg [1:0]num_regs,
                     output reg [2:0] func3);
     //Decode logic begins here
     
@@ -767,6 +768,7 @@ module control_unit(input wire [31:0] instruction,
         id_jalr_sig = 0;
         id_auipc_s = 0;
         id_jal_sig = 0;
+        num_regs = 0;
         func3 = instruction[14:12];
         
         if(instruction !=0) begin
@@ -774,6 +776,7 @@ module control_unit(input wire [31:0] instruction,
                 7'b0110011: begin // R-Type
                     // Set control signals for R-Type instruction
                     id_rf_enable = 1;
+                    num_regs = 2;
                     
                     case(func3)
                     
@@ -855,6 +858,7 @@ module control_unit(input wire [31:0] instruction,
                     id_alu_op = 1;
                     id_shifter_imm = 3'b001;
                     id_rf_enable = 1;
+                    num_regs =  1;
 
                     case(func3)
 
@@ -975,6 +979,7 @@ module control_unit(input wire [31:0] instruction,
                     id_shifter_imm = 3'b010;
                     id_mem_ins_enable = 1;
                     id_mem_write = 1;
+                    num_regs = 2;
                     case(func3)
                         3'b000: begin 
                             size = 2'b00; // SB instruction
@@ -997,6 +1002,7 @@ module control_unit(input wire [31:0] instruction,
 
                     id_full_cond = {instruction[6:0], instruction[14:12]};
                     id_shifter_imm = 0;
+                    num_regs = 2;
                     case(func3)
 
                          3'b000: begin
@@ -1084,6 +1090,7 @@ module CUMux (
     input wire id_jalr_sig,
     input wire id_auipc_s,
     input wire id_jal_sig,
+    input wire [1:0]num_regs,
     output reg id_rf_enable_mux,
     output reg [3:0] id_alu_op_mux,
     output reg [2:0] id_shifter_imm_mux,
@@ -1095,7 +1102,8 @@ module CUMux (
     output reg [9:0] id_full_cond_mux,
     output reg id_jalr_sig_mux,
     output reg id_auipc_s_mux,
-    output reg id_jal_sig_mux
+    output reg id_jal_sig_mux,
+    output reg [1:0]num_regs_mux
 );
  always@* begin
         
@@ -1113,6 +1121,7 @@ module CUMux (
             id_jalr_sig_mux = 1'b0;
             id_auipc_s_mux = 1'b0;
             id_jal_sig_mux = 1'b0;
+            num_regs_mux = 0;
 
         end else begin
         //Control Unit signals  
@@ -1128,6 +1137,7 @@ module CUMux (
             id_jalr_sig_mux = id_jalr_sig;
             id_auipc_s_mux = id_auipc_s;
             id_jal_sig_mux = id_jal_sig;
+            num_regs_mux = num_regs;
         end
     end
 
@@ -1190,12 +1200,12 @@ module hazard_forwarding_unit (
     output reg [87:0] fwd_stage,
     input [0:0] wb_rf_enable, mem_rf_enable, ex_rf_enable, ex_load_instr,
     input [4:0] rm, rn, ex_rd, mem_rd, wb_rd,
-    input [1:0] num_regs
+    input [1:0] num_regs_mux
     );
 
     always @ (*) begin
 
-        case (num_regs)
+        case (num_regs_mux)
 
             2'b00: begin
                 if_id_enable = 1'b1;
@@ -1398,6 +1408,8 @@ module processor(
 
     // New Hazard fwd stage
     wire [87:0] fwd_stage;
+
+    wire [1:0] num_regs, num_regs_mux;
 
     /*--------------------------------------IF stage--------------------------------------*/
 
@@ -1623,7 +1635,8 @@ module processor(
         .id_auipc_s(id_auipc_s),
         .id_jal_sig(id_jal_sig),
         .add_sub_sign(add_sub_sign),
-        .func3(func3)
+        .func3(func3),
+        .num_regs(num_regs)
     );
 
     CUMux CUMux_inst(
@@ -1640,6 +1653,7 @@ module processor(
         .id_jalr_sig(id_jalr_sig),
         .id_auipc_s(id_auipc_s),
         .id_jal_sig(id_jal_sig),
+        .num_regs(num_regs),
         .id_rf_enable_mux(id_rf_enable_mux),
         .id_alu_op_mux(id_alu_op_mux),
         .id_shifter_imm_mux(id_shifter_imm_mux),
@@ -1651,7 +1665,8 @@ module processor(
         .id_full_cond_mux(id_full_cond_mux),
         .id_jalr_sig_mux(id_jalr_sig_mux),
         .id_auipc_s_mux(id_auipc_s_mux),
-        .id_jal_sig_mux(id_jal_sig_mux)
+        .id_jal_sig_mux(id_jal_sig_mux),
+        .num_regs_mux(num_regs_mux)
     );
 
     // //Hazard Forwarding Unit
@@ -1688,7 +1703,8 @@ module processor(
             .control_nop(nop_signal),
             .if_id_enable(load_enable),
             .pc_load_enable(pc_enable),
-            .fwd_stage(fwd_stage)
+            .fwd_stage(fwd_stage),
+            .num_regs_mux(num_regs_mux)
         );
    
     //Signal Selector Muxes

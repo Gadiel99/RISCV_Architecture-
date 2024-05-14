@@ -198,8 +198,9 @@ always @(posedge clk) begin
         // );
 
         $display("\nHazard forwarding Unit");
-        $monitor("\t\nPC = %d, \n\tfwd stage = %s, \t\nid_rd = %d, \t\nex_rd = %d, \t\nmem_rd = %d, \t\nwb_rd = %d, \t\nReg_RD = %d, \t\nRegPW = %d, \t\nReg 5 = %d, \t\nid_Rn =%d,\t\nid_Rm= %d,\n\tex_Rd = %d, \n\tmem_Rd = %d, \n\twb_Rd = %d, \n\tex_Rf_enable = %b, \n\tmem_Rf_enable = %b,\n\twb_Rf_enable = %b,\n\tforwardA = %d,\n\tforwardB = %d,\n\tnop_signal = %b,\n\tload_enable = %b,\n\tpc_enable = %b",
+        $monitor("\t\nPC = %d,\n\tnum_reg_hf = %d,\n\tfwd stage = %s, \t\nid_rd = %d, \t\nex_rd = %d, \t\nmem_rd = %d, \t\nwb_rd = %d, \t\nReg_RD = %d, \t\nRegPW = %d, \t\nReg 5 = %d, \t\nid_Rn =%d,\t\nid_Rm= %d,\n\tex_Rd = %d, \n\tmem_Rd = %d, \n\twb_Rd = %d, \n\tex_Rf_enable = %b, \n\tmem_Rf_enable = %b,\n\twb_Rf_enable = %b,\n\tforwardA = %d,\n\tforwardB = %d,\n\tnop_signal = %b,\n\tload_enable = %b,\n\tpc_enable = %b",
                  uut.pc_current,
+                 uut.num_regs_mux,
                  uut.hazard_forwarding_unit_inst.fwd_stage,
                  uut.id_rd,
                  uut.ex_rd,
