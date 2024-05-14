@@ -58,11 +58,11 @@ module processor_tb;
 //                  uut.id_imm12_I
 //                 );
 always @(posedge clk) begin
-    $display("\n\tRegisters");
-    $monitor("\n\tTime = %d, \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d", $time, uut.pc_current, uut.instruction,
-        uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
-        uut.registerfile_inst.registers5,uut.registerfile_inst.registers6,
-    );
+    // $display("\n\tRegisters");
+    // $monitor("\n\tTime = %d, \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d", $time, uut.pc_current, uut.instruction,
+    //     uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
+    //     uut.registerfile_inst.registers5,uut.registerfile_inst.registers6,
+    // );
     // $monitor("\n\t \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d,\n\t mux2x1_alu_input_A_output:%d,\n\t SOH_out:%d:,\n\talu_op:%b, \n\t alu_out:%d,\n\t id_load=%d, \n\t ex_load=%d, \n\t mem_load=%d,\n\tmem_out:%d,\n\tmem_alu_out:%d,\n\tex_alu_out = %d\n\tdata mux input 0 = %b,\n\tdata mux input 1 = %b,\n\tdata mux control signal = %b,\n\tdata mux output value= %b", uut.pc_current, uut.instruction,
         // uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
         // uut.registerfile_inst.registers5,uut.registerfile_inst.registers6,
@@ -335,7 +335,14 @@ always @(posedge clk) begin
 //           uut.mux4x1_rf_PB_output.output_value
         
 //          );
-
+        $display("ID Jump Mux");
+        $monitor("\n\tPC = %d, \n\tImm B = %d, \n\tImm J = %d, \t\nMux Output = %d, \n\tControl Signal = %b ",
+            uut.pc_current,
+            uut.mux2x1_id_Jump_TA.input0,
+            uut.mux2x1_id_Jump_TA.input1,
+            uut.mux2x1_id_Jump_TA.control_signal,
+            uut.mux2x1_id_Jump_TA.output_value
+        );
         
    end
 

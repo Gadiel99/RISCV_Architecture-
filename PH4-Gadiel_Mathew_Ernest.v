@@ -182,7 +182,7 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, id_pc, id_pc_next
                                 output reg [11:0] id_imm12_I,
                                 output reg [11:0] id_imm12_S,
                                 output reg [19:0] id_imm20,
-                                output reg [11:0] id_imm12_B,
+                                output reg [12:0] id_imm_B,
                                 output reg [20:0] id_imm_J,
                                 output reg [4:0] id_rd,
                                 input  clk, reset, LE,
@@ -779,7 +779,8 @@ module control_unit(input wire [31:0] instruction,
     output reg id_jal_sig,
     output reg add_sub_sign,
     output reg [1:0]num_regs,
-                    output reg [2:0] func3);
+    output reg [2:0] func3,
+    output reg id_b_sig);
     //Decode logic begins here
     
     always @(instruction)begin
@@ -797,6 +798,7 @@ module control_unit(input wire [31:0] instruction,
         id_jal_sig = 0;
         num_regs = 0;
         func3 = instruction[14:12];
+        id_b_sig = 0;
         
         if(instruction !=0) begin
             case(instruction[6:0]) // Check the opcode
@@ -1030,6 +1032,7 @@ module control_unit(input wire [31:0] instruction,
                     id_full_cond = {instruction[6:0], instruction[14:12]};
                     id_shifter_imm = 0;
                     num_regs = 2;
+                    id_b_sig = 1;
                     case(func3)
 
                          3'b000: begin
@@ -1105,6 +1108,7 @@ endmodule
 /*****Control Unit MUX Module*****/
 module CUMux (
     input wire s,
+    input wire id_b_sig,
     input wire [3:0] id_alu_op, 
     input wire [2:0] id_shifter_imm,
     input wire id_rf_enable, 
@@ -1130,7 +1134,8 @@ module CUMux (
     output reg id_jalr_sig_mux,
     output reg id_auipc_s_mux,
     output reg id_jal_sig_mux,
-    output reg [1:0]num_regs_mux
+    output reg [1:0]num_regs_mux,
+    output reg id_b_sig_mux
 );
  always@* begin
         
@@ -1149,6 +1154,7 @@ module CUMux (
             id_auipc_s_mux = 1'b0;
             id_jal_sig_mux = 1'b0;
             num_regs_mux = 0;
+            id_b_sig_mux = 0;
 
         end else begin
         //Control Unit signals  
@@ -1165,6 +1171,7 @@ module CUMux (
             id_auipc_s_mux = id_auipc_s;
             id_jal_sig_mux = id_jal_sig;
             num_regs_mux = num_regs;
+            id_b_sig_mux = id_b_sig;
         end
     end
 
@@ -1547,13 +1554,20 @@ module processor(
     wire id_ex_pipe_reg_reset_signal = ex_jalr_sig | control_hazard_signal;
      
     // mux2x1_alu_output_cs
-    wire mux2x1_alu_output_cs = id_jal_sig | ex_jalr_sig;
+    wire mux2x1_alu_output_cs = id_jal_sig_mux | ex_jalr_sig;
 
-    wire mux2x1_if_TA_output_cs = id_jal_sig | ex_jalr_sig | control_hazard_signal;
+    wire mux2x1_if_TA_output_cs = id_jal_sig_mux | ex_jalr_sig | control_hazard_signal;
     
     //wire mux2x1_if_TA_output_cs = 0;
-    wire mux2x1_id_adder_input_cs = id_jal_sig | ex_jalr_sig;
+    wire mux2x1_id_adder_input_cs = id_b_sig_mux;
+    wire id_b_sig_mux;
+    wire id_b_sig;
 
+    wire [12:0] id_imm_B;
+    wire [20:0] id_imm_J;
+    wire [31:0] id_imm_B_SE;
+    wire [31:0] id_imm_J_SE;
+    wire [31:0] mux2x1_id_jump_TA_output;
     // id pa / pb output
 
     wire [31:0] id_PA_output, id_PB_output;
@@ -1602,7 +1616,9 @@ module processor(
         .id_rm(id_rm),
         .id_imm20(id_imm20),
         .id_rd(id_rd),
-        .id_pc_next(id_pc_next)
+        .id_pc_next(id_pc_next), 
+        .id_imm_B(id_imm_B),
+        .id_imm_J(id_imm_J)
     );
 
     /*--------------------------------------ID stage--------------------------------------*/
@@ -1675,8 +1691,8 @@ module processor(
         .id_imm20(id_imm20),
         .id_imm20_SE(id_imm20_SE)
     );
-    
-        SE_21bits SE_21bits_inst (
+
+    SE_21bits SE_21bits_inst (
         .id_imm_J_SE(id_imm_J_SE),
         .id_imm_J(id_imm_J)
     );
@@ -1798,11 +1814,13 @@ module processor(
         .id_jal_sig(id_jal_sig),
         .add_sub_sign(add_sub_sign),
         .func3(func3),
-        .num_regs(num_regs)
+        .num_regs(num_regs),
+        .id_b_sig(id_b_sig)
     );
 
     CUMux CUMux_inst(
         .s(nop_signal),
+        .id_b_sig(id_b_sig),
         .id_alu_op(id_alu_op),
         .id_shifter_imm(id_shifter_imm),
         .id_rf_enable(id_rf_enable),
@@ -1828,7 +1846,8 @@ module processor(
         .id_jalr_sig_mux(id_jalr_sig_mux),
         .id_auipc_s_mux(id_auipc_s_mux),
         .id_jal_sig_mux(id_jal_sig_mux),
-        .num_regs_mux(num_regs_mux)
+        .num_regs_mux(num_regs_mux),
+        .id_b_sig_mux(id_b_sig_mux)
     );
 
     // //Hazard Forwarding Unit
@@ -1880,14 +1899,21 @@ module processor(
     mux2x1 mux2x1_id_TA(
         .input0(mux2x1_ex_TA_output),
         .input1(id_TA),
-        .control_signal(id_jal_sig),
+        .control_signal(id_jal_sig_mux),
         .output_value(mux2x1_id_TA_output)
+    );
+
+    mux2x1 mux2x1_id_Jump_TA(
+        .input0(id_imm_B_SE),
+        .input1(id_imm_J_SE),
+        .control_signal(id_jal_sig_mux),
+        .output_value(mux2x1_id_jump_TA_output)
     );
 
     mux2x1 mux2x1_id_adder_input(
         .input0(id_imm20_SE),
-        .input1(id_imm12_I_SE),
-        .control_signal(mux2x1_id_adder_input_cs),
+        .input1(mux2x1_id_jump_TA_output),
+        .control_signal(id_b_sig_mux),
         .output_value(mux2x1_id_adder_input_output)
     );
 
