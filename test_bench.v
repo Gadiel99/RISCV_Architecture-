@@ -289,6 +289,24 @@ always @(posedge clk) begin
         //             uut.id_Adder_inst.id_TA
         // );
 
+        $display("MUXA 4x1");
+        $monitor("\tPC  = %d,\n\tinput0MUX_A = %d,\n\tinput1MUX_A = %d,\n\tinput2MUX_A = %d,\n\tinput3MUX_A = %d,\n\tcontorl signalMUX_A = %b,\n\toutputMUX_A = %d,\n\n\tinput0MUX_B = %d,\n\tinput1MUX_B = %d,\n\tinput2MUX_B = %d,\n\tinput3MUX_B = %d,\n\tcontorl signalMUX_B = %b,\n\toutputMUX_B = %d",
+          uut.pc_current,
+          uut.mux4x1_rf_PA_output.input0,
+          uut.mux4x1_rf_PA_output.input1,
+          uut.mux4x1_rf_PA_output.input2,
+          uut.mux4x1_rf_PA_output.input3,
+          uut.mux4x1_rf_PA_output.control_signal,
+          uut.mux4x1_rf_PA_output.output_value,
+          uut.mux4x1_rf_PB_output.input0,
+          uut.mux4x1_rf_PB_output.input1,
+          uut.mux4x1_rf_PB_output.input2,
+          uut.mux4x1_rf_PB_output.input3,
+          uut.mux4x1_rf_PB_output.control_signal,
+          uut.mux4x1_rf_PB_output.output_value
+        
+         );
+
         
    end
 

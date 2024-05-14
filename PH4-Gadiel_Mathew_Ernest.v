@@ -145,7 +145,7 @@ module instruction_memory(
     //Reading the preload memory
     //If this is not working specified the whole directory of the file.
     initial begin
-      $readmemb("C:/Users/maxme/Desktop/project P/RISCV_Architecture--2/validation_code.txt", mem);
+      $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/validation_code.txt", mem);
     end 
     
     //Making the arragment for the instruction
@@ -693,7 +693,7 @@ module data_memory(
         end 
     end
     initial begin
-        $readmemb("C:/Users/maxme/Desktop/project P/RISCV_Architecture--2/validation_code.txt", mem);
+        $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/validation_code.txt", mem);
     end
 endmodule
 
@@ -1877,18 +1877,18 @@ module processor(
 
     mux4x1 mux4x1_rf_PA_output(
         .input0(id_PA),
-        .input1(wb_mux2x1_mem_output),
+        .input1(ex_mux2x1_alu_output_output),
         .input2(mux2x1_mem_output),
-        .input3(ex_mux2x1_alu_output_output),
+        .input3(wb_mux2x1_mem_output),
         .control_signal(forwardA_out),
         .output_value(id_PA_output)
     );
     
     mux4x1 mux4x1_rf_PB_output(
         .input0(id_PB),
-        .input1(wb_mux2x1_mem_output),
+        .input1(ex_mux2x1_alu_output_output),
         .input2(mux2x1_mem_output),
-        .input3(ex_mux2x1_alu_output_output),
+        .input3(wb_mux2x1_mem_output),
         .control_signal(forwardB_out),
         .output_value(id_PB_output)
     );
