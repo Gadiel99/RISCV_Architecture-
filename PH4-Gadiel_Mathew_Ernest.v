@@ -114,6 +114,28 @@ always @(*) begin
 end
 endmodule
 
+module SE_21bits(
+    output reg [31:0] id_imm_J_SE,
+    input [20:0] id_imm_J
+);
+
+always@(*) begin
+    id_imm_J_SE = {{11{id_imm_J[20]}}, id_imm_J};
+end
+endmodule
+
+module SE_13bits(
+    output reg [31:0] id_imm_B_SE,
+    input [12:0] id_imm_B
+);
+
+always@(*) begin
+    id_imm_B_SE = {{19{id_imm_B[12]}}, id_imm_B};
+end
+endmodule
+
+
+
 module SE_20bits(
     output reg [31:0] id_imm20_SE,
     input [19:0] id_imm20
@@ -145,7 +167,7 @@ module instruction_memory(
     //Reading the preload memory
     //If this is not working specified the whole directory of the file.
     initial begin
-      $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/validation_code.txt", mem);
+      $readmemb("C:/Users/maxme/Desktop/project P/RISCV_Architecture--2/validation_code.txt", mem);
     end 
     
     //Making the arragment for the instruction
@@ -160,6 +182,8 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, id_pc, id_pc_next
                                 output reg [11:0] id_imm12_I,
                                 output reg [11:0] id_imm12_S,
                                 output reg [19:0] id_imm20,
+                                output reg [11:0] id_imm12_B,
+                                output reg [20:0] id_imm_J,
                                 output reg [4:0] id_rd,
                                 input  clk, reset, LE,
                                 input [31:0] ins_mem_out, PC, pc_next);
@@ -185,6 +209,9 @@ module IF_ID_pipeline_register( output reg [31:0] instruction, id_pc, id_pc_next
             id_imm12_I <= ins_mem_out[31:20];
             id_imm12_S <= {ins_mem_out[31:25], ins_mem_out[11:7]};
             id_rd <= ins_mem_out[11:7];
+            id_imm_B <= {ins_mem_out[31], ins_mem_out[7], ins_mem_out[30:25], ins_mem_out[11:8], 1'b0};
+            id_imm_J <= {ins_mem_out[31], ins_mem_out[19:12], ins_mem_out[20], ins_mem_out[30:21], 1'b0};
+
         
         end
         
@@ -693,7 +720,7 @@ module data_memory(
         end 
     end
     initial begin
-        $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/validation_code.txt", mem);
+        $readmemb("C:/Users/maxme/Desktop/project P/RISCV_Architecture--2/validation_code.txt", mem);
     end
 endmodule
 

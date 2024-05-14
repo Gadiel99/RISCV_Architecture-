@@ -58,11 +58,11 @@ module processor_tb;
 //                  uut.id_imm12_I
 //                 );
 always @(posedge clk) begin
-    // $display("\n\tRegisters");
-    // $monitor("\n\tTime = %d, \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d", $time, uut.pc_current, uut.instruction,
-    //     uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
-    //     uut.registerfile_inst.registers5,uut.registerfile_inst.registers6,
-    // );
+    $display("\n\tRegisters");
+    $monitor("\n\tTime = %d, \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d", $time, uut.pc_current, uut.instruction,
+        uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
+        uut.registerfile_inst.registers5,uut.registerfile_inst.registers6,
+    );
     // $monitor("\n\t \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d,\n\t mux2x1_alu_input_A_output:%d,\n\t SOH_out:%d:,\n\talu_op:%b, \n\t alu_out:%d,\n\t id_load=%d, \n\t ex_load=%d, \n\t mem_load=%d,\n\tmem_out:%d,\n\tmem_alu_out:%d,\n\tex_alu_out = %d\n\tdata mux input 0 = %b,\n\tdata mux input 1 = %b,\n\tdata mux control signal = %b,\n\tdata mux output value= %b", uut.pc_current, uut.instruction,
         // uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
         // uut.registerfile_inst.registers5,uut.registerfile_inst.registers6,
@@ -231,7 +231,11 @@ always @(posedge clk) begin
         //         uut.condition_handler_inst.control_hazard_out,
         //         uut.condition_handler_inst.Z_flag,
         //         uut.condition_handler_inst.N_flag,
+        //         uut.id_full_cond_mux,
         //         uut.condition_handler_inst.ex_full_cond
+        //         uut.mux2x1_ex_TA.input0,
+        //         uut.mux2x1_ex_TA.input1,
+        //         uut.mux2x1_ex_TA.con
         // );
 
         // $display("\nProgram counter & IF_TA_MUX");
@@ -289,23 +293,23 @@ always @(posedge clk) begin
         //             uut.id_Adder_inst.id_TA
         // );
 
-        $display("MUXA 4x1");
-        $monitor("\tPC  = %d,\n\tinput0MUX_A = %d,\n\tinput1MUX_A = %d,\n\tinput2MUX_A = %d,\n\tinput3MUX_A = %d,\n\tcontorl signalMUX_A = %b,\n\toutputMUX_A = %d,\n\n\tinput0MUX_B = %d,\n\tinput1MUX_B = %d,\n\tinput2MUX_B = %d,\n\tinput3MUX_B = %d,\n\tcontorl signalMUX_B = %b,\n\toutputMUX_B = %d",
-          uut.pc_current,
-          uut.mux4x1_rf_PA_output.input0,
-          uut.mux4x1_rf_PA_output.input1,
-          uut.mux4x1_rf_PA_output.input2,
-          uut.mux4x1_rf_PA_output.input3,
-          uut.mux4x1_rf_PA_output.control_signal,
-          uut.mux4x1_rf_PA_output.output_value,
-          uut.mux4x1_rf_PB_output.input0,
-          uut.mux4x1_rf_PB_output.input1,
-          uut.mux4x1_rf_PB_output.input2,
-          uut.mux4x1_rf_PB_output.input3,
-          uut.mux4x1_rf_PB_output.control_signal,
-          uut.mux4x1_rf_PB_output.output_value
+//         $display("MUXA 4x1");
+//         $monitor("\tPC  = %d,\n\tinput0MUX_A = %d,\n\tinput1MUX_A = %d,\n\tinput2MUX_A = %d,\n\tinput3MUX_A = %d,\n\tcontorl signalMUX_A = %b,\n\toutputMUX_A = %d,\n\n\tinput0MUX_B = %d,\n\tinput1MUX_B = %d,\n\tinput2MUX_B = %d,\n\tinput3MUX_B = %d,\n\tcontorl signalMUX_B = %b,\n\toutputMUX_B = %d",
+//           uut.pc_current,
+//           uut.mux4x1_rf_PA_output.input0,
+//           uut.mux4x1_rf_PA_output.input1,
+//           uut.mux4x1_rf_PA_output.input2,
+//           uut.mux4x1_rf_PA_output.input3,
+//           uut.mux4x1_rf_PA_output.control_signal,
+//           uut.mux4x1_rf_PA_output.output_value,
+//           uut.mux4x1_rf_PB_output.input0,
+//           uut.mux4x1_rf_PB_output.input1,
+//           uut.mux4x1_rf_PB_output.input2,
+//           uut.mux4x1_rf_PB_output.input3,
+//           uut.mux4x1_rf_PB_output.control_signal,
+//           uut.mux4x1_rf_PB_output.output_value
         
-         );
+//          );
 
         
    end
