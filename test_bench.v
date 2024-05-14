@@ -58,7 +58,7 @@ module processor_tb;
 //                  uut.id_imm12_I
 //                 );
 always @(posedge clk) begin
-
+    // $display("\n\tRegisters");
     // $monitor("\n\tTime = %d, \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d", $time, uut.pc_current, uut.instruction,
     //     uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
     //     uut.registerfile_inst.registers5,uut.registerfile_inst.registers6,
@@ -197,32 +197,32 @@ always @(posedge clk) begin
         //         uut.instruction_memory_inst.instruction
         // );
 
-        $display("\nHazard forwarding Unit");
-        $monitor("\t\nPC = %d,\n\tnum_reg_hf = %d,\n\tfwd stage = %s, \t\nid_rd = %d, \t\nex_rd = %d, \t\nmem_rd = %d, \t\nwb_rd = %d, \t\nReg_RD = %d, \t\nRegPW = %d, \t\nReg 5 = %d, \t\nid_Rn =%d,\t\nid_Rm= %d,\n\tex_Rd = %d, \n\tmem_Rd = %d, \n\twb_Rd = %d, \n\tex_Rf_enable = %b, \n\tmem_Rf_enable = %b,\n\twb_Rf_enable = %b,\n\tforwardA = %d,\n\tforwardB = %d,\n\tnop_signal = %b,\n\tload_enable = %b,\n\tpc_enable = %b",
-                 uut.pc_current,
-                 uut.num_regs_mux,
-                 uut.hazard_forwarding_unit_inst.fwd_stage,
-                 uut.id_rd,
-                 uut.ex_rd,
-                 uut.mem_rd,
-                 uut.wb_rd,
-                 uut.registerfile_inst.RW,
-                 uut.wb_mux2x1_mem_output,
-                 uut.registerfile_inst.registers5,
-                 uut.hazard_forwarding_unit_inst.rn,
-                 uut.hazard_forwarding_unit_inst.rm,
-                 uut.hazard_forwarding_unit_inst.ex_rd,
-                 uut.hazard_forwarding_unit_inst.mem_rd,
-                 uut.hazard_forwarding_unit_inst.wb_rd,
-                 uut.hazard_forwarding_unit_inst.ex_rf_enable,
-                 uut.hazard_forwarding_unit_inst.mem_rf_enable,
-                 uut.hazard_forwarding_unit_inst.wb_rf_enable,
-                 uut.hazard_forwarding_unit_inst.ForwardA,
-                 uut.hazard_forwarding_unit_inst.ForwardB,
-                 uut.hazard_forwarding_unit_inst.control_nop,
-                 uut.hazard_forwarding_unit_inst.if_id_enable,
-                 uut.hazard_forwarding_unit_inst.pc_load_enable  
-        );
+        // $display("\nHazard forwarding Unit");
+        // $monitor("\t\nPC = %d,\n\tnum_reg_hf = %d,\n\tfwd stage = %s, \t\nid_rd = %d, \t\nex_rd = %d, \t\nmem_rd = %d, \t\nwb_rd = %d, \t\nReg_RD = %d, \t\nRegPW = %d, \t\nReg 5 = %d, \t\nid_Rn =%d,\t\nid_Rm= %d,\n\tex_Rd = %d, \n\tmem_Rd = %d, \n\twb_Rd = %d, \n\tex_Rf_enable = %b, \n\tmem_Rf_enable = %b,\n\twb_Rf_enable = %b,\n\tforwardA = %d,\n\tforwardB = %d,\n\tnop_signal = %b,\n\tload_enable = %b,\n\tpc_enable = %b",
+        //          uut.pc_current,
+        //          uut.num_regs_mux,
+        //          uut.hazard_forwarding_unit_inst.fwd_stage,
+        //          uut.id_rd,
+        //          uut.ex_rd,
+        //          uut.mem_rd,
+        //          uut.wb_rd,
+        //          uut.registerfile_inst.RW,
+        //          uut.wb_mux2x1_mem_output,
+        //          uut.registerfile_inst.registers5,
+        //          uut.hazard_forwarding_unit_inst.rn,
+        //          uut.hazard_forwarding_unit_inst.rm,
+        //          uut.hazard_forwarding_unit_inst.ex_rd,
+        //          uut.hazard_forwarding_unit_inst.mem_rd,
+        //          uut.hazard_forwarding_unit_inst.wb_rd,
+        //          uut.hazard_forwarding_unit_inst.ex_rf_enable,
+        //          uut.hazard_forwarding_unit_inst.mem_rf_enable,
+        //          uut.hazard_forwarding_unit_inst.wb_rf_enable,
+        //          uut.hazard_forwarding_unit_inst.ForwardA,
+        //          uut.hazard_forwarding_unit_inst.ForwardB,
+        //          uut.hazard_forwarding_unit_inst.control_nop,
+        //          uut.hazard_forwarding_unit_inst.if_id_enable,
+        //          uut.hazard_forwarding_unit_inst.pc_load_enable  
+        // );
 
         // $display("\nCondition handler");
         // $monitor("\t\nPC = %d, \t\nAlu_N_Flag = %b, \t\ncontrol_hazard_out = %b, \n\tZ flag = %b, \n\tN flag = %b,\n\tex_full_cond = %b",

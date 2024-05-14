@@ -1193,6 +1193,122 @@ endmodule
 
 // endmodule
 
+// // -------------------------- HAZARDS FORWARDING UNIT ------------------------
+// module hazard_forwarding_unit (
+//     output reg [1:0] ForwardA, ForwardB,
+//     output reg [0:0] control_nop, if_id_enable, pc_load_enable,
+//     output reg [87:0] fwd_stage,
+//     input [0:0] wb_rf_enable, mem_rf_enable, ex_rf_enable, ex_load_instr,
+//     input [4:0] rm, rn, ex_rd, mem_rd, wb_rd,
+//     input [1:0] num_regs_mux
+//     );
+
+//     always @ (*) begin
+
+//         case (num_regs_mux)
+
+//             2'b00: begin
+//                 if_id_enable = 1'b1;
+//                 pc_load_enable = 1'b1;
+//                 control_nop = 1'b0;
+//                 ForwardA = 2'b00;
+//                 ForwardB = 2'b00;
+//                 fwd_stage = "           ";
+//             end
+
+//             2'b01: begin
+
+//                 // Defaults
+//                 if_id_enable = 1'b1;
+//                 pc_load_enable = 1'b1;
+//                 control_nop = 1'b0;
+//                 ForwardA = 2'b00;
+//                 ForwardB = 2'b00;
+//                 fwd_stage = "           ";
+
+//                 // Handle forwarding PA
+//                 if (ex_load_instr & (rn == ex_rd)) begin
+//                     if_id_enable = 1'b0;
+//                     pc_load_enable = 1'b0;
+//                     control_nop = 1'b1;
+//                 end else begin
+//                     if_id_enable = 1'b1;
+//                     pc_load_enable = 1'b1;
+//                     control_nop = 1'b0;
+//                     if (ex_rf_enable & (rn == ex_rd)) begin
+//                         ForwardA = 2'b01; // Forward ex_out (ex_rd)
+//                         fwd_stage = "FWD EX!    ";
+//                     end else if (mem_rf_enable & (rn == mem_rd)) begin
+//                         ForwardA = 2'b10; // Forward mem_out (mem_rd)
+//                         fwd_stage = "FWD MEM!   ";
+//                     end else if (wb_rf_enable & (rn == wb_rd)) begin
+//                         ForwardA = 2'b11; // Forward wb_out (wb_rd)
+//                         fwd_stage = "FWD WB!    ";
+//                     end else begin
+//                         ForwardA = 2'b00; // Don't forward (keep PA)
+//                     end
+//                 end
+//             end
+
+//             2'b10: begin
+
+//                 // Defaults
+//                 if_id_enable = 1'b1;
+//                 pc_load_enable = 1'b1;
+//                 control_nop = 1'b0;
+//                 ForwardA = 2'b00;
+//                 ForwardB = 2'b00;
+//                 fwd_stage = "           ";
+
+//                 if (ex_load_instr & ((rn == ex_rd) | (rm == ex_rd))) begin
+//                     if_id_enable = 1'b0;
+//                     pc_load_enable = 1'b0;
+//                     control_nop = 1'b1;
+//                 end else begin
+//                     if_id_enable = 1'b1;
+//                     pc_load_enable = 1'b1;
+//                     control_nop = 1'b0;
+//                     if (ex_rf_enable & (rn == ex_rd)) begin
+//                         ForwardA = 2'b01; // Forward ex_out (ex_rd)
+//                         fwd_stage = "FWD EX!    ";
+//                     end else if (mem_rf_enable & (rn == mem_rd)) begin
+//                         ForwardA = 2'b10; // Forward mem_out (mem_rd)
+//                         fwd_stage = "FWD MEM!   ";
+//                     end else if (wb_rf_enable & (rn == wb_rd)) begin
+//                         ForwardA = 2'b11; // Forward wb_out (wb_rd)
+//                         fwd_stage = "FWD WB!    ";
+//                     end else begin
+//                         ForwardA = 2'b00; // Don't forward (keep PA)
+//                     end
+//                     if (ex_rf_enable & (rm == ex_rd)) begin
+//                         ForwardB = 2'b01; // Forward ex_out (ex_rd)
+//                         fwd_stage = "FWD EX!    ";
+//                     end else if (mem_rf_enable & (rm == mem_rd)) begin
+//                         ForwardB = 2'b10; // Forward mem_out (mem_rd)
+//                         fwd_stage = "FWD MEM!   ";
+//                     end else if (wb_rf_enable & (rm == wb_rd)) begin
+//                         ForwardB = 2'b11; // Forward wb_out (wb_rd)
+//                         fwd_stage = "FWD WB!    ";
+//                     end else begin
+//                         ForwardB = 2'b00; // Don't forward (keep PA)
+//                     end
+//                 end
+//             end
+
+//             default: begin
+//                 if_id_enable = 1'b1;
+//                 pc_load_enable = 1'b1;
+//                 control_nop = 1'b0;
+//                 ForwardA = 2'b00;
+//                 ForwardB = 2'b00;
+//                 fwd_stage = "           ";
+//             end
+            
+//         endcase
+
+//     end
+// endmodule
+
 // -------------------------- HAZARDS FORWARDING UNIT ------------------------
 module hazard_forwarding_unit (
     output reg [1:0] ForwardA, ForwardB,
@@ -1226,8 +1342,7 @@ module hazard_forwarding_unit (
                 ForwardB = 2'b00;
                 fwd_stage = "           ";
 
-                // Handle forwarding PA
-                if (ex_load_instr & (rn == ex_rd)) begin
+                if (ex_load_instr & ((rn == ex_rd) | (rm == ex_rd))) begin
                     if_id_enable = 1'b0;
                     pc_load_enable = 1'b0;
                     control_nop = 1'b1;
@@ -1246,6 +1361,18 @@ module hazard_forwarding_unit (
                         fwd_stage = "FWD WB!    ";
                     end else begin
                         ForwardA = 2'b00; // Don't forward (keep PA)
+                    end
+                    if (ex_rf_enable & (rm == ex_rd)) begin
+                        ForwardB = 2'b01; // Forward ex_out (ex_rd)
+                        fwd_stage = "FWD EX!    ";
+                    end else if (mem_rf_enable & (rm == mem_rd)) begin
+                        ForwardB = 2'b10; // Forward mem_out (mem_rd)
+                        fwd_stage = "FWD MEM!   ";
+                    end else if (wb_rf_enable & (rm == wb_rd)) begin
+                        ForwardB = 2'b11; // Forward wb_out (wb_rd)
+                        fwd_stage = "FWD WB!    ";
+                    end else begin
+                        ForwardB = 2'b00; // Don't forward (keep PA)
                     end
                 end
             end
@@ -1308,8 +1435,6 @@ module hazard_forwarding_unit (
 
     end
 endmodule
-
-
 
 module processor(
     input wire clk,
