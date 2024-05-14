@@ -1675,6 +1675,16 @@ module processor(
         .id_imm20(id_imm20),
         .id_imm20_SE(id_imm20_SE)
     );
+    
+        SE_21bits SE_21bits_inst (
+        .id_imm_J_SE(id_imm_J_SE),
+        .id_imm_J(id_imm_J)
+    );
+
+    SE_13bits SE_13bits_inst (
+        .id_imm_B_SE(id_imm_B_SE),
+        .id_imm_B(id_imm_B)
+    );
 
     id_Adder id_Adder_inst(
         .mux2x1_id_adder_input_output(mux2x1_id_adder_input_output),
