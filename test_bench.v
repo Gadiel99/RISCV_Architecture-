@@ -105,9 +105,10 @@ always @(posedge clk) begin
         
         
         // $display("\nIF/ID pipeline");
-        // $monitor("\treset =%b, \tLE = %b, \n\tins_mem_out = %b,\n\tPC = %d,\n\tinstruction = %b,\n\tid_pc = %d,\n\tid_imm12_S = %b, \n\tid_imm12_I = %b,\n\tid_rn = %b, id_rm = %b,\n\tid_imm20 = %b,\n\tid_rd = %b,\n\tid_pc_next = %d",
+        // $monitor("\treset =%b, \tLE = %b, PCPlus4 = %d, \n\tins_mem_out = %b,\n\tPC = %d,\n\tinstruction = %b,\n\tid_pc = %d,\n\tid_imm12_S = %d, \n\tid_imm12_I = %d,\n\tid_rn = %d, id_rm = %d,\n\tid_imm20 = %d,\n\tid_rd = %d,\n\tid_pc_next = %d",
         //          uut.IF_ID_pipeline_register_inst.reset,
         //          uut.IF_ID_pipeline_register_inst.LE,
+        //          uut.pc_adder.pcplus4,
         //          uut.IF_ID_pipeline_register_inst.ins_mem_out,
         //          uut.IF_ID_pipeline_register_inst.PC,
         //          uut.IF_ID_pipeline_register_inst.instruction,
@@ -122,8 +123,9 @@ always @(posedge clk) begin
         // );
 
         // $display("\nID/EX pipeline");
-        // $monitor("\treset = %b,\n\tid_alu_op_mux = %b,\n\tid_shifter_imm_mux = %b,\n\tid_rf_enable_mux = %b,\n\tid_load_inst_mux = %b,\n\tid_mem_ins_enable_mux = %b,\n\tid_mem_write_mux = %b,\n\tsize_mux = %b,\n\tid_se_mux = %b,\n\tid_full_cond_mux = %b,\n\tid_jalr_sig_mux = %b,\n\tid_auipc_s_mux= %b,\n\tid_jal_sig_mux = %b, \n\tid_TA = %d,\n\tid_pc = %d,\n\tid_PA = %d,\n\tid_PB = %d,\n\tid_imm12_I = %b,\n\tid_imm12_S = %b,\n\tid_pc_next = %d,\n\tid_imm20 = %b,\n\tid_rd = %d,\n\tex_rf_enable = %b,\n\tex_alu_op= %b,\n\tex_shifter_imm = %b,\n\tex_load_inst = %b,\n\tex_mem_ins_enable = %b,\n\tex_mem_write = %b,\n\tex_size= %b,\n\tex_se = %b,\n\tex_full_cond = %b,\n\tex_jalr_sig = %b,\n\tex_auipc_s = %b,\n\tex_jal_sig = %b,\n\tex_TA = %d,\n\tex_pc = %b,\n\tex_PA = %d,\n\tex_PB = %d,\n\tex_imm12_I = %b,\n\tex_imm12_S = %b,\n\tex_pc_next = %d,\n\tex_imm20 = %b\n\tex_rd = %d",
+        // $monitor("\treset = %b, \t\nPC = %d, \n\tid_alu_op_mux = %b,\n\tid_shifter_imm_mux = %b,\n\tid_rf_enable_mux = %b,\n\tid_load_inst_mux = %b,\n\tid_mem_ins_enable_mux = %b,\n\tid_mem_write_mux = %b,\n\tsize_mux = %b,\n\tid_se_mux = %b,\n\tid_full_cond_mux = %b,\n\tid_jalr_sig_mux = %b,\n\tid_auipc_s_mux= %b,\n\tid_jal_sig_mux = %b, \n\tid_TA = %d,\n\tid_pc = %d,\n\tid_PA = %d,\n\tid_PB = %d,\n\tid_imm12_I = %b,\n\tid_imm12_S = %b,\n\tid_pc_next = %d,\n\tid_imm20 = %b,\n\tid_rd = %d,\n\tex_rf_enable = %b,\n\tex_alu_op= %b,\n\tex_shifter_imm = %b,\n\tex_load_inst = %b,\n\tex_mem_ins_enable = %b,\n\tex_mem_write = %b,\n\tex_size= %b,\n\tex_se = %b,\n\tex_full_cond = %b,\n\tex_jalr_sig = %b,\n\tex_auipc_s = %b,\n\tex_jal_sig = %b,\n\tex_TA = %d,\n\tex_pc = %b,\n\tex_PA = %d,\n\tex_PB = %d,\n\tex_imm12_I = %b,\n\tex_imm12_S = %b,\n\tex_pc_next = %d,\n\tex_imm20 = %b\n\tex_rd = %d",
         // uut.ID_EX_pipeline_register_inst.reset,
+        // uut.pc_current,
         // uut.ID_EX_pipeline_register_inst.id_alu_op_mux,
         // uut.ID_EX_pipeline_register_inst.id_shifter_imm_mux,
         // uut.ID_EX_pipeline_register_inst.id_rf_enable_mux,
@@ -168,7 +170,21 @@ always @(posedge clk) begin
         // uut.ID_EX_pipeline_register_inst.ex_rd
         // );
 
-
+        // $display("MEM/WB Pipeline Register");
+        // $monitor("\t\nreset = %b, \t\nPC = %d, \t\nInstruction = %b, \t\nID_RD = %d, \t\nEx_RD = %d, \t\nMEM_RD = %d, \t\nWB_RD = %d, \t\nMux_mem_Output = %d, \t\nMux_WB_Output = %d, \t\nMem_RF_En = %b, \t\nWB_RF_En = %b", 
+        //         uut.MEM_WB_pipeline_register_inst.reset,
+        //         uut.pc_current,
+        //         uut.IF_ID_pipeline_register_inst.instruction,
+        //         uut.id_rd,
+        //         uut.ex_rd,
+        //         uut.MEM_WB_pipeline_register_inst.mem_rd,
+        //         uut.MEM_WB_pipeline_register_inst.wb_rd,
+        //         uut.MEM_WB_pipeline_register_inst.mux2x1_mem_output,
+        //         uut.MEM_WB_pipeline_register_inst.wb_mux2x1_mem_output,
+        //         uut.MEM_WB_pipeline_register_inst.mem_rf_enable,
+        //         uut.MEM_WB_pipeline_register_inst.wb_rf_enable
+        
+        // );
 
         // $display("ID/EX Pipeline Register"); 
         // $monitor("reset = %b, id_alu_op_mux = %b, id_shifter_imm_mux = %b, id_id_rf_enable_mux = %b, id_load_inst_mux= %b, if_load_inst_mux = %b, id_mem_ins_enable_mux = %b, size_mux = %b, id_se_mux = %b, id_full_cond_mux = %b, id_TA = %b, id_pc = %b, id_PA = %b, "
@@ -181,25 +197,36 @@ always @(posedge clk) begin
         //         uut.instruction_memory_inst.instruction
         // );
 
-        // $display("\nHazard forwarding Unit");
-        // $monitor("\tid_Rn =%b,\tid_Rm= %b,\n\tex_Rd = %b, \n\tmem_Rd = %b, \n\twb_Rd = %b, \n\tex_Rf_enable = %b, \n\tmem_Rf_enable = %b,\n\twb_Rf_enable = %b,\n\tforwardA = %b,\n\tforwardB = %b,\n\tnop_signal = %b,\n\tload_enable = %b,\n\tpc_enable = %b",
-        //          uut.hazard_forwarding_unit_inst.id_Rn,
-        //          uut.hazard_forwarding_unit_inst.id_Rm,
-        //          uut.hazard_forwarding_unit_inst.ex_Rd,
-        //          uut.hazard_forwarding_unit_inst.mem_Rd,
-        //          uut.hazard_forwarding_unit_inst.wb_Rd,
-        //          uut.hazard_forwarding_unit_inst.ex_Rf_enable,
-        //          uut.hazard_forwarding_unit_inst.mem_Rf_enable,
-        //          uut.hazard_forwarding_unit_inst.wb_Rf_enable,
-        //          uut.hazard_forwarding_unit_inst.forwardA,
-        //          uut.hazard_forwarding_unit_inst.forwardB,
-        //          uut.hazard_forwarding_unit_inst.nop_signal,
-        //          uut.hazard_forwarding_unit_inst.load_enable,
-        //          uut.hazard_forwarding_unit_inst.pc_enable  
-        // );
+        $display("\nHazard forwarding Unit");
+        $monitor("\t\nPC = %d, \n\tfwd stage = %s, \t\nid_rd = %d, \t\nex_rd = %d, \t\nmem_rd = %d, \t\nwb_rd = %d, \t\nReg_RD = %d, \t\nRegPW = %d, \t\nReg 5 = %d, \t\nid_Rn =%d,\t\nid_Rm= %d,\n\tex_Rd = %d, \n\tmem_Rd = %d, \n\twb_Rd = %d, \n\tex_Rf_enable = %b, \n\tmem_Rf_enable = %b,\n\twb_Rf_enable = %b,\n\tforwardA = %d,\n\tforwardB = %d,\n\tnop_signal = %b,\n\tload_enable = %b,\n\tpc_enable = %b",
+                 uut.pc_current,
+                 uut.hazard_forwarding_unit_inst.fwd_stage,
+                 uut.id_rd,
+                 uut.ex_rd,
+                 uut.mem_rd,
+                 uut.wb_rd,
+                 uut.registerfile_inst.RW,
+                 uut.wb_mux2x1_mem_output,
+                 uut.registerfile_inst.registers5,
+                 uut.hazard_forwarding_unit_inst.rn,
+                 uut.hazard_forwarding_unit_inst.rm,
+                 uut.hazard_forwarding_unit_inst.ex_rd,
+                 uut.hazard_forwarding_unit_inst.mem_rd,
+                 uut.hazard_forwarding_unit_inst.wb_rd,
+                 uut.hazard_forwarding_unit_inst.ex_rf_enable,
+                 uut.hazard_forwarding_unit_inst.mem_rf_enable,
+                 uut.hazard_forwarding_unit_inst.wb_rf_enable,
+                 uut.hazard_forwarding_unit_inst.ForwardA,
+                 uut.hazard_forwarding_unit_inst.ForwardB,
+                 uut.hazard_forwarding_unit_inst.control_nop,
+                 uut.hazard_forwarding_unit_inst.if_id_enable,
+                 uut.hazard_forwarding_unit_inst.pc_load_enable  
+        );
 
         // $display("\nCondition handler");
-        // $monitor("\tcontrol_hazard_out = %b, \n\tZ flag = %b, \n\tN flag = %b,\n\tex_full_cond = %b",
+        // $monitor("\t\nPC = %d, \t\nAlu_N_Flag = %b, \t\ncontrol_hazard_out = %b, \n\tZ flag = %b, \n\tN flag = %b,\n\tex_full_cond = %b",
+        //         uut.pc_current,
+        //         uut.ALU_inst.N,
         //         uut.condition_handler_inst.control_hazard_out,
         //         uut.condition_handler_inst.Z_flag,
         //         uut.condition_handler_inst.N_flag,

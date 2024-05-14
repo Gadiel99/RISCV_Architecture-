@@ -145,7 +145,7 @@ module instruction_memory(
     //Reading the preload memory
     //If this is not working specified the whole directory of the file.
     initial begin
-      $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/validation_code.txt", mem);
+      $readmemb("C:/Users/maxme/Desktop/project P/RISCV_Architecture--2/validation_code.txt", mem);
     end 
     
     //Making the arragment for the instruction
@@ -558,7 +558,7 @@ always @(*) begin
             3'b100: // BLT
                 if (N_flag == 1'b1) control_hazard_out = 1'b1;
             3'b101: // BGE
-                if (N_flag == 1'b0) control_hazard_out = 1'b1;
+                if (N_flag == 1'b0 || Z_flag == 1'b1) control_hazard_out = 1'b1;
             3'b110: // BLTU
                 control_hazard_out = 1'b1; // Assuming unsigned comparison logic
             3'b111: // BGEU
@@ -693,7 +693,7 @@ module data_memory(
         end 
     end
     initial begin
-        $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/validation_code.txt", mem);
+        $readmemb("C:/Users/maxme/Desktop/project P/RISCV_Architecture--2/validation_code.txt", mem);
     end
 endmodule
 
@@ -1133,55 +1133,173 @@ module CUMux (
 
 endmodule
 
-module hazard_forwarding_unit(
-    input [4:0] id_Rn, id_Rm,
-    input [4:0] ex_Rd, mem_Rd, wb_Rd,
-    input wire ex_Rf_enable, mem_Rf_enable, wb_Rf_enable,
-    input wire ex_load_inst,
+// module hazard_forwarding_unit(
+//     input [4:0] id_Rn, id_Rm,
+//     input [4:0] ex_Rd, mem_Rd, wb_Rd,
+//     input wire ex_Rf_enable, mem_Rf_enable, wb_Rf_enable,
+//     input wire ex_load_inst,
 
-    //Selectors for forwarding
-    output reg [1:0] forwardA,
-    output reg [1:0] forwardB,
-    output reg nop_signal,
-    output reg load_enable,
-    output reg pc_enable
-);
+//     //Selectors for forwarding
+//     output reg [1:0] forwardA,
+//     output reg [1:0] forwardB,
+//     output reg nop_signal,
+//     output reg load_enable,
+//     output reg pc_enable
+// );
 
-always @(*) begin
-    // Default values
-    forwardA = 2'b00;
-    forwardB = 2'b00;
-    nop_signal = 1'b0;
-    load_enable = 1'b1;
-    pc_enable = 1'b1;
+// always @(*) begin
+//     // Default values
+//     forwardA = 2'b00;
+//     forwardB = 2'b00;
+//     nop_signal = 1'b0;
+//     load_enable = 1'b1;
+//     pc_enable = 1'b1;
 
-    // Check for load-use hazard
-    if (ex_load_inst && (ex_Rd != 0) && ((id_Rn == ex_Rd) || (id_Rm == ex_Rd))) begin
-        // Stall the pipeline if the next instruction needs the result of a memory load
-        load_enable = 1'b0;
-        pc_enable = 1'b0;
-        nop_signal = 1'b1;
+//     // Check for load-use hazard
+//     if (ex_load_inst && (ex_Rd != 0) && ((id_Rn == ex_Rd) || (id_Rm == ex_Rd))) begin
+//         // Stall the pipeline if the next instruction needs the result of a memory load
+//         load_enable = 1'b0;
+//         pc_enable = 1'b0;
+//         nop_signal = 1'b1;
 
-    end else if(ex_Rf_enable && (ex_Rd != 0) && ((id_Rn == ex_Rd))) begin
-        //Forward from EX to ID
-        forwardA = 2'b11;
-    end else if (mem_Rf_enable && (mem_Rd != 0) && (id_Rn == mem_Rd)) begin
-        forwardA = 2'b10; // Forward from MEM to ID
-    end else if (wb_Rf_enable && (wb_Rd != 0) && (id_Rn == wb_Rd)) begin
-        forwardA = 2'b01; // Forward from WB to ID
+//     end else if(ex_Rf_enable && (ex_Rd != 0) && ((id_Rn == ex_Rd))) begin
+//         //Forward from EX to ID
+//         forwardA = 2'b01;
+//     end else if (mem_Rf_enable && (mem_Rd != 0) && (id_Rn == mem_Rd)) begin
+//         forwardA = 2'b10; // Forward from MEM to ID
+//     end else if (wb_Rf_enable && (wb_Rd != 0) && (id_Rn == wb_Rd)) begin
+//         forwardA = 2'b11; // Forward from WB to ID
+//     end
+
+//     // Data Forwarding for PB
+//     if(ex_Rf_enable && (ex_Rd != 0) && ((id_Rm == ex_Rd))) begin
+//         forwardB = 2'b01;
+//     end else if (mem_Rf_enable && (mem_Rd != 0) && (id_Rm == mem_Rd)) begin
+//         forwardB = 2'b10; // Forward from MEM to EX
+//     end else if (wb_Rf_enable && (wb_Rd != 0) && (id_Rm == wb_Rd)) begin
+//         forwardB = 2'b11; // Forward from WB to EX
+//     end
+// end
+
+// endmodule
+
+// -------------------------- HAZARDS FORWARDING UNIT ------------------------
+module hazard_forwarding_unit (
+    output reg [1:0] ForwardA, ForwardB,
+    output reg [0:0] control_nop, if_id_enable, pc_load_enable,
+    output reg [87:0] fwd_stage,
+    input [0:0] wb_rf_enable, mem_rf_enable, ex_rf_enable, ex_load_instr,
+    input [4:0] rm, rn, ex_rd, mem_rd, wb_rd,
+    input [1:0] num_regs
+    );
+
+    always @ (*) begin
+
+        case (num_regs)
+
+            2'b00: begin
+                if_id_enable = 1'b1;
+                pc_load_enable = 1'b1;
+                control_nop = 1'b0;
+                ForwardA = 2'b00;
+                ForwardB = 2'b00;
+                fwd_stage = "           ";
+            end
+
+            2'b01: begin
+
+                // Defaults
+                if_id_enable = 1'b1;
+                pc_load_enable = 1'b1;
+                control_nop = 1'b0;
+                ForwardA = 2'b00;
+                ForwardB = 2'b00;
+                fwd_stage = "           ";
+
+                // Handle forwarding PA
+                if (ex_load_instr & (rn == ex_rd)) begin
+                    if_id_enable = 1'b0;
+                    pc_load_enable = 1'b0;
+                    control_nop = 1'b1;
+                end else begin
+                    if_id_enable = 1'b1;
+                    pc_load_enable = 1'b1;
+                    control_nop = 1'b0;
+                    if (ex_rf_enable & (rn == ex_rd)) begin
+                        ForwardA = 2'b01; // Forward ex_out (ex_rd)
+                        fwd_stage = "FWD EX!    ";
+                    end else if (mem_rf_enable & (rn == mem_rd)) begin
+                        ForwardA = 2'b10; // Forward mem_out (mem_rd)
+                        fwd_stage = "FWD MEM!   ";
+                    end else if (wb_rf_enable & (rn == wb_rd)) begin
+                        ForwardA = 2'b11; // Forward wb_out (wb_rd)
+                        fwd_stage = "FWD WB!    ";
+                    end else begin
+                        ForwardA = 2'b00; // Don't forward (keep PA)
+                    end
+                end
+            end
+
+            2'b10: begin
+
+                // Defaults
+                if_id_enable = 1'b1;
+                pc_load_enable = 1'b1;
+                control_nop = 1'b0;
+                ForwardA = 2'b00;
+                ForwardB = 2'b00;
+                fwd_stage = "           ";
+
+                if (ex_load_instr & ((rn == ex_rd) | (rm == ex_rd))) begin
+                    if_id_enable = 1'b0;
+                    pc_load_enable = 1'b0;
+                    control_nop = 1'b1;
+                end else begin
+                    if_id_enable = 1'b1;
+                    pc_load_enable = 1'b1;
+                    control_nop = 1'b0;
+                    if (ex_rf_enable & (rn == ex_rd)) begin
+                        ForwardA = 2'b01; // Forward ex_out (ex_rd)
+                        fwd_stage = "FWD EX!    ";
+                    end else if (mem_rf_enable & (rn == mem_rd)) begin
+                        ForwardA = 2'b10; // Forward mem_out (mem_rd)
+                        fwd_stage = "FWD MEM!   ";
+                    end else if (wb_rf_enable & (rn == wb_rd)) begin
+                        ForwardA = 2'b11; // Forward wb_out (wb_rd)
+                        fwd_stage = "FWD WB!    ";
+                    end else begin
+                        ForwardA = 2'b00; // Don't forward (keep PA)
+                    end
+                    if (ex_rf_enable & (rm == ex_rd)) begin
+                        ForwardB = 2'b01; // Forward ex_out (ex_rd)
+                        fwd_stage = "FWD EX!    ";
+                    end else if (mem_rf_enable & (rm == mem_rd)) begin
+                        ForwardB = 2'b10; // Forward mem_out (mem_rd)
+                        fwd_stage = "FWD MEM!   ";
+                    end else if (wb_rf_enable & (rm == wb_rd)) begin
+                        ForwardB = 2'b11; // Forward wb_out (wb_rd)
+                        fwd_stage = "FWD WB!    ";
+                    end else begin
+                        ForwardB = 2'b00; // Don't forward (keep PA)
+                    end
+                end
+            end
+
+            default: begin
+                if_id_enable = 1'b1;
+                pc_load_enable = 1'b1;
+                control_nop = 1'b0;
+                ForwardA = 2'b00;
+                ForwardB = 2'b00;
+                fwd_stage = "           ";
+            end
+            
+        endcase
+
     end
-
-    // Data Forwarding for PB
-    if(ex_Rf_enable && (ex_Rd != 0) && ((id_Rm == ex_Rd))) begin
-        forwardB = 2'b11;
-    end else if (mem_Rf_enable && (mem_Rd != 0) && (id_Rm == mem_Rd)) begin
-        forwardB = 2'b10; // Forward from MEM to EX
-    end else if (wb_Rf_enable && (wb_Rd != 0) && (id_Rm == wb_Rd)) begin
-        forwardB = 2'b01; // Forward from WB to EX
-    end
-end
-
 endmodule
+
+
 
 module processor(
     input wire clk,
@@ -1277,6 +1395,9 @@ module processor(
     // id pa / pb output
 
     wire [31:0] id_PA_output, id_PB_output;
+
+    // New Hazard fwd stage
+    wire [87:0] fwd_stage;
 
     /*--------------------------------------IF stage--------------------------------------*/
 
@@ -1533,24 +1654,42 @@ module processor(
         .id_jal_sig_mux(id_jal_sig_mux)
     );
 
-    //Hazard Forwarding Unit
-    hazard_forwarding_unit hazard_forwarding_unit_inst(
-        .id_Rn(id_rn),
-        .id_Rm(id_rm),
-        .ex_Rd(ex_rd),
-        .mem_Rd(mem_rd),
-        .wb_Rd(wb_rd),
-        .ex_Rf_enable(ex_rf_enable),
-        .mem_Rf_enable(mem_rf_enable),
-        .wb_Rf_enable(wb_rf_enable),
-        .ex_load_inst(ex_load_inst),
-        .forwardA(forwardA_out),
-        .forwardB(forwardB_out),
-        .nop_signal(nop_signal),
-        .load_enable(load_enable),
-        .pc_enable(pc_enable)
-    );
+    // //Hazard Forwarding Unit
+    // hazard_forwarding_unit hazard_forwarding_unit_inst(
+    //     .id_Rn(id_rn),
+    //     .id_Rm(id_rm),
+    //     .ex_Rd(ex_rd),
+    //     .mem_Rd(mem_rd),
+    //     .wb_Rd(wb_rd),
+    //     .ex_Rf_enable(ex_rf_enable),
+    //     .mem_Rf_enable(mem_rf_enable),
+    //     .wb_Rf_enable(wb_rf_enable),
+    //     .ex_load_inst(ex_load_inst),
+    //     .forwardA(forwardA_out),
+    //     .forwardB(forwardB_out),
+    //     .nop_signal(nop_signal),
+    //     .load_enable(load_enable),
+    //     .pc_enable(pc_enable)
+    // );
 
+    //Hazard Forwarding Unit
+        hazard_forwarding_unit hazard_forwarding_unit_inst(
+            .rn(id_rn),
+            .rm(id_rm),
+            .ex_rd(ex_rd),
+            .mem_rd(mem_rd),
+            .wb_rd(wb_rd),
+            .ex_rf_enable(ex_rf_enable),
+            .mem_rf_enable(mem_rf_enable),
+            .wb_rf_enable(wb_rf_enable),
+            .ex_load_instr(ex_load_inst),
+            .ForwardA(forwardA_out),
+            .ForwardB(forwardB_out),
+            .control_nop(nop_signal),
+            .if_id_enable(load_enable),
+            .pc_load_enable(pc_enable),
+            .fwd_stage(fwd_stage)
+        );
    
     //Signal Selector Muxes
     mux2x1 mux2x1_if_TA(
