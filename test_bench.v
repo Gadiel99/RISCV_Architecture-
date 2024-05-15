@@ -335,16 +335,21 @@ always @(posedge clk) begin
 //           uut.mux4x1_rf_PB_output.output_value
         
 //          );
-        $display("ID Jump Mux");
-        $monitor("\n\tPC = %d, \n\tImm B = %d, \n\tImm J = %d, \t\nMux Output = %d, \n\tControl Signal = %b ",
-            uut.pc_current,
-            uut.mux2x1_id_Jump_TA.input0,
-            uut.mux2x1_id_Jump_TA.input1,
-            uut.mux2x1_id_Jump_TA.control_signal,
-            uut.mux2x1_id_Jump_TA.output_value
-        );
+//         $display("ID Jump Mux");
+//         $monitor("\n\tPC = %d, \n\tImm B = %d, \n\tImm J = %d, \t\nMux 1 Output = %d, \n\tmux 1 Control Signal = %d, \n\tmux 2 input 0 = %d, \n\tmux 2 input 1 = %d, \n\tmux 2 control = %d, \n\tmux 2 output = %d ",
+//             uut.pc_current,
+//             uut.mux2x1_id_Jump_TA.input0,
+//             uut.mux2x1_id_Jump_TA.input1,
+//             uut.mux2x1_id_Jump_TA.output_value,
+//             uut.mux2x1_id_Jump_TA.control_signal, 
+//             uut.mux2x1_id_adder_input.input0,
+//             uut.mux2x1_id_adder_input.input1,
+//             uut.mux2x1_id_adder_input.control_signal,
+//             uut.mux2x1_id_adder_input.output_value
+
+//         );
         
-   end
+//    end
 
 
 endmodule
