@@ -167,7 +167,7 @@ module instruction_memory(
     //Reading the preload memory
     //If this is not working specified the whole directory of the file.
     initial begin
-      $readmemb("C:/Users/maxme/Desktop/project P/RISCV_Architecture--2/validation_code.txt", mem);
+      $readmemb("C:/Users/Ernest William/Desktop/test-code.txt", mem);
     end 
     
     //Making the arragment for the instruction
@@ -490,7 +490,7 @@ module ALU(
     );
     
     always @ (A, B, Op) begin
-
+        $display("alu_A:%d , alu_B:%d", A, B);
         case (Op)
             4'b0000: Out = B; // Pass through B
             4'b0001: Out = B + 4; // B + 4
@@ -510,7 +510,7 @@ module ALU(
                  N = Out[31]; // Negative flag
                 // Overflow flag for subtraction
                  V = (A[31] ^ B[31]) & (A[31] ^ Out[31]);
-    
+               $display("alu_Z:%b , alu_N:%b, alu_A:%d , alu_B:%d", Z, N,A,B);
             end
 
             4'b0100: Out = (A + B) & 32'hFFFFFFFE; // (A + B) AND with mask for even number
@@ -572,27 +572,45 @@ module CONDITION_HANDLER(
 );
 
 always @(*) begin
-
+$display("cond:%b, Z:%b, N:%b", ex_full_cond,Z_flag,N_flag);
     // Assuming ex_full_cond[2:0] is the funct3 part
-    if(ex_full_cond == 10'b0)begin
+    if(ex_full_cond[9:3] != 7'b1100011)begin
         control_hazard_out = 1'b0;
+        
     end else begin
+        //if(ex)
+        $display("ex_full_cond[2:0]:%b", ex_full_cond[2:0]);
         case (ex_full_cond[2:0])
             3'b000: // BEQ
                 if (Z_flag == 1'b1) control_hazard_out = 1'b1;
+                else control_hazard_out = 1'b0;
             3'b001: // BNE
-                if (Z_flag == 1'b0) control_hazard_out = 1'b1;
+            begin
+                $display("CH_BNE");
+                if (Z_flag == 1'b0) begin
+                    control_hazard_out = 1'b1;
+                //$display("CH_BNE");
+                end else control_hazard_out = 1'b0;
+            end
             3'b100: // BLT
-                if (N_flag == 1'b1) control_hazard_out = 1'b1;
+                if (Z_flag == 1'b0) control_hazard_out = 1'b1;
+                else control_hazard_out = 1'b0;
             3'b101: // BGE
-                if (N_flag == 1'b0 || Z_flag == 1'b1) control_hazard_out = 1'b1;
+                if ( (Z_flag == 1) | (N_flag == 0)) begin
+                    control_hazard_out = 1;
+                    //  $display("\nhazard_out:%b", control_hazard_out);
+                    //  $display("Z:%b, N:%b", Z_flag,N_flag);
+                end else control_hazard_out = 1'b0;
             3'b110: // BLTU
-                control_hazard_out = 1'b1; // Assuming unsigned comparison logic
+                if (Z_flag == 1'b0) control_hazard_out = 1'b1;
+                else control_hazard_out = 1'b0;
             3'b111: // BGEU
-                control_hazard_out = 1'b1; // Assuming unsigned comparison logic
+                if ( Z_flag == 1'b1) control_hazard_out = 1'b1;
+                else control_hazard_out = 1'b0;
             default:
                 control_hazard_out = 1'b0;
         endcase
+        // $display("\nhazard_out:%b", control_hazard_out);
     end
 end
 
@@ -720,7 +738,7 @@ module data_memory(
         end 
     end
     initial begin
-        $readmemb("C:/Users/maxme/Desktop/project P/RISCV_Architecture--2/validation_code.txt", mem);
+        $readmemb("C:/Users/Ernest William/Desktop/test-code.txt", mem);
     end
 endmodule
 
@@ -805,7 +823,7 @@ module control_unit(input wire [31:0] instruction,
                 7'b0110011: begin // R-Type
                     // Set control signals for R-Type instruction
                     id_rf_enable = 1;
-                    num_regs = 2;
+                    num_regs = 2'b10;
                     
                     case(func3)
                     
@@ -887,7 +905,7 @@ module control_unit(input wire [31:0] instruction,
                     id_alu_op = 1;
                     id_shifter_imm = 3'b001;
                     id_rf_enable = 1;
-                    num_regs =  1;
+                    num_regs =  2'b01;
 
                     case(func3)
 
@@ -961,6 +979,7 @@ module control_unit(input wire [31:0] instruction,
                     id_shifter_imm = 3'b001;
                     id_rf_enable = 1;
                     id_jalr_sig = 1;
+                    num_regs = 2'b01;
                     $display("JALR");
                     
                 end 
@@ -972,6 +991,7 @@ module control_unit(input wire [31:0] instruction,
                     id_rf_enable = 1;
                     id_load_inst = 1;
                     id_mem_ins_enable = 1;
+                    num_regs = 2'b01;
                     //mem_set_inst = 0;
 
                     case(func3)
@@ -1008,7 +1028,7 @@ module control_unit(input wire [31:0] instruction,
                     id_shifter_imm = 3'b010;
                     id_mem_ins_enable = 1;
                     id_mem_write = 1;
-                    num_regs = 2;
+                    num_regs = 2'b01;
                     case(func3)
                         3'b000: begin 
                             size = 2'b00; // SB instruction
@@ -1030,39 +1050,40 @@ module control_unit(input wire [31:0] instruction,
                     // If it's a branch instruction, combine the opcode and funct3
 
                     id_full_cond = {instruction[6:0], instruction[14:12]};
-                    id_shifter_imm = 0;
-                    num_regs = 2;
+                    id_shifter_imm = 3'b0;
+                    num_regs = 2'b10;
                     id_b_sig = 1;
+                    id_alu_op = 4'b0011;
                     case(func3)
 
                          3'b000: begin
-                           id_alu_op = 4'b0011;
+                         //  id_alu_op = 4'b0011;
                            
                             $display("BEQ");
                         end
 
                          3'b001: begin
-                           id_alu_op = 4'b0011;
+                        //   id_alu_op = 4'b0011;
                             $display("BNE");
                         end
 
                          3'b100: begin
-                           id_alu_op = 4'b1000;
+                         //  id_alu_op = 4'b1000;
                             $display("BLT");
                         end
                         
                          3'b101: begin
-                           id_alu_op = 4'b1000;
+                         //  id_alu_op = 4'b1000;
                             $display("BGE");
                         end
 
                          3'b110: begin
-                           id_alu_op = 4'b1001;
+                         //  id_alu_op = 4'b1001;
                             $display("BLTU");
                         end
 
                          3'b111: begin
-                            id_alu_op = 4'b1001;
+                         //   id_alu_op = 4'b1001;
                             $display("BGEU");
                         end
                     endcase 
@@ -1073,6 +1094,7 @@ module control_unit(input wire [31:0] instruction,
                     id_alu_op = 4'b0000;
                     id_shifter_imm = 3'b011;
                     id_rf_enable = 1;
+                    num_regs = 0;
                     $display("LUI");
                 end 
                 
@@ -1084,6 +1106,7 @@ module control_unit(input wire [31:0] instruction,
                     id_shifter_imm = 3'b011;
                     id_rf_enable = 1;
                     id_auipc_s = 1;
+                    num_regs = 0;
                     $display("AUIPC");
                 end
                 7'b1101111: begin // J-Type
@@ -1091,6 +1114,7 @@ module control_unit(input wire [31:0] instruction,
                     //TODO: special case
                     id_rf_enable = 1;
                     id_jal_sig = 1;
+                    num_regs = 0;
                     $display("JAL");
                 end
                 default: begin
@@ -1354,7 +1378,7 @@ module hazard_forwarding_unit (
     );
 
     always @ (*) begin
-
+       //$display("rs1:%d , rd:%d", rn, ex_rd );
         case (num_regs_mux)
 
             2'b00: begin
@@ -1373,10 +1397,10 @@ module hazard_forwarding_unit (
                 pc_load_enable = 1'b1;
                 control_nop = 1'b0;
                 ForwardA = 2'b00;
-                ForwardB = 2'b00;
+              //  ForwardB = 2'b00;
                 fwd_stage = "           ";
 
-                if (ex_load_instr & ((rn == ex_rd) | (rm == ex_rd))) begin
+                if (ex_load_instr & (rn == ex_rd)) begin
                     if_id_enable = 1'b0;
                     pc_load_enable = 1'b0;
                     control_nop = 1'b1;
@@ -1393,21 +1417,8 @@ module hazard_forwarding_unit (
                     end else if (wb_rf_enable & (rn == wb_rd)) begin
                         ForwardA = 2'b11; // Forward wb_out (wb_rd)
                         fwd_stage = "FWD WB!    ";
-                    end else begin
-                        ForwardA = 2'b00; // Don't forward (keep PA)
-                    end
-                    if (ex_rf_enable & (rm == ex_rd)) begin
-                        ForwardB = 2'b01; // Forward ex_out (ex_rd)
-                        fwd_stage = "FWD EX!    ";
-                    end else if (mem_rf_enable & (rm == mem_rd)) begin
-                        ForwardB = 2'b10; // Forward mem_out (mem_rd)
-                        fwd_stage = "FWD MEM!   ";
-                    end else if (wb_rf_enable & (rm == wb_rd)) begin
-                        ForwardB = 2'b11; // Forward wb_out (wb_rd)
-                        fwd_stage = "FWD WB!    ";
-                    end else begin
-                        ForwardB = 2'b00; // Don't forward (keep PA)
-                    end
+                    end 
+                     
                 end
             end
 
@@ -1438,9 +1449,7 @@ module hazard_forwarding_unit (
                     end else if (wb_rf_enable & (rn == wb_rd)) begin
                         ForwardA = 2'b11; // Forward wb_out (wb_rd)
                         fwd_stage = "FWD WB!    ";
-                    end else begin
-                        ForwardA = 2'b00; // Don't forward (keep PA)
-                    end
+                    end 
                     if (ex_rf_enable & (rm == ex_rd)) begin
                         ForwardB = 2'b01; // Forward ex_out (ex_rd)
                         fwd_stage = "FWD EX!    ";
@@ -1450,9 +1459,7 @@ module hazard_forwarding_unit (
                     end else if (wb_rf_enable & (rm == wb_rd)) begin
                         ForwardB = 2'b11; // Forward wb_out (wb_rd)
                         fwd_stage = "FWD WB!    ";
-                    end else begin
-                        ForwardB = 2'b00; // Don't forward (keep PA)
-                    end
+                    end 
                 end
             end
 

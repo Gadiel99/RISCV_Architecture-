@@ -27,9 +27,12 @@ module processor_tb;
     initial begin
         #3 reset = 0; // Desactiva el reset
         
-        #100$finish; // Termina la simulación
+        #200$finish; // Termina la simulación
     end
-    
+     initial begin
+         #190 $display("Mem_48:%b , Mem_49:%b , Mem_50:%b , Mem_51:%b", uut.data_memory_inst.mem[48], uut.data_memory_inst.mem[49], uut.data_memory_inst.mem[50], uut.data_memory_inst.mem[51]);
+       // #190 $display("Mem_40:%b , Mem_41:%b , Mem_42:%b , Mem_43:%b", uut.data_memory_inst.mem[40], uut.data_memory_inst.mem[41], uut.data_memory_inst.mem[42], uut.data_memory_inst.mem[43]);
+    end
    //Monitoreo de senales
 //    always @(posedge clk) begin
 //         $monitor("\n\t \n\tPC = %d, \n\tInstruction = %b, \n\tid_rd = %d, \n\tex_rd = %d, \n\tmem_rd = %d, \n\twb_rd = %d,\n\t  alu_output:%d, \n\tmem_pw = %d, \n\t pw=%d, \n\tid_load_instr:%d ,\n\t ex_load_instr:%d,  \n\t mem_load_instr:%d, \n\t id_alu_op:%b, \n\t ex_alu_op:%b, \n\t alu_a:%d , \n\t alu_b:%d, \n\t soh_pb:%d,\n\t soh_imms:%d, \n\t soh_immi:%d, \n\t soh_imm20:%d, \n\t soh_shifter:%b, \n\t id_imm12_I:%d",
@@ -59,10 +62,15 @@ module processor_tb;
 //                 );
 always @(posedge clk) begin
     // $display("\n\tRegisters");
-    // $monitor("\n\tTime = %d, \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d", $time, uut.pc_current, uut.instruction,
-    //     uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
-    //     uut.registerfile_inst.registers5,uut.registerfile_inst.registers6,
-    // );
+    $monitor("\n\tTime = %d, \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d", $time, uut.pc_current, uut.instruction,
+        uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
+        uut.registerfile_inst.registers5,uut.registerfile_inst.registers6,
+    );
+    // initial begin
+    //     #58 $display("Mem_48:%b , Mem_49:%b , Mem_50:%b , Mem_51:%b", uut.data_memory_inst.mem{48}, uut.data_memory_inst.mem{49}, uut.data_memory_inst.mem{50}, uut.data_memory_inst.mem{51});
+    // end
+    // $monitor("\n\t PC = %d, \n\t Address:%d, \n\t rw:%d, \n\t enable:%d, \n\t sign ext:%d, \n\t data in:%d, \n\t ALU input A: %d, \n\t ALU input B: %d", uut.pc_current, uut.mem_mux2x1_alu_output_output, uut.mem_mem_write, uut.mem_mem_ins_enable, uut.mem_se, uut.mem_PB,
+    // uut.mux2x1_alu_input_A_output,uut.N_SOH );
     // $monitor("\n\t \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d,\n\t mux2x1_alu_input_A_output:%d,\n\t SOH_out:%d:,\n\talu_op:%b, \n\t alu_out:%d,\n\t id_load=%d, \n\t ex_load=%d, \n\t mem_load=%d,\n\tmem_out:%d,\n\tmem_alu_out:%d,\n\tex_alu_out = %d\n\tdata mux input 0 = %b,\n\tdata mux input 1 = %b,\n\tdata mux control signal = %b,\n\tdata mux output value= %b", uut.pc_current, uut.instruction,
         // uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
         // uut.registerfile_inst.registers5,uut.registerfile_inst.registers6,
@@ -294,22 +302,22 @@ always @(posedge clk) begin
         // );
 
 //         $display("MUXA 4x1");
-//         $monitor("\tPC  = %d,\n\tinput0MUX_A = %d,\n\tinput1MUX_A = %d,\n\tinput2MUX_A = %d,\n\tinput3MUX_A = %d,\n\tcontorl signalMUX_A = %b,\n\toutputMUX_A = %d,\n\n\tinput0MUX_B = %d,\n\tinput1MUX_B = %d,\n\tinput2MUX_B = %d,\n\tinput3MUX_B = %d,\n\tcontorl signalMUX_B = %b,\n\toutputMUX_B = %d",
-//           uut.pc_current,
-//           uut.mux4x1_rf_PA_output.input0,
-//           uut.mux4x1_rf_PA_output.input1,
-//           uut.mux4x1_rf_PA_output.input2,
-//           uut.mux4x1_rf_PA_output.input3,
-//           uut.mux4x1_rf_PA_output.control_signal,
-//           uut.mux4x1_rf_PA_output.output_value,
-//           uut.mux4x1_rf_PB_output.input0,
-//           uut.mux4x1_rf_PB_output.input1,
-//           uut.mux4x1_rf_PB_output.input2,
-//           uut.mux4x1_rf_PB_output.input3,
-//           uut.mux4x1_rf_PB_output.control_signal,
-//           uut.mux4x1_rf_PB_output.output_value
+        // $monitor("\tPC  = %d,\n\tinput0MUX_A = %d,\n\tinput1MUX_A = %d,\n\tinput2MUX_A = %d,\n\tinput3MUX_A = %d,\n\tcontorl signalMUX_A = %b,\n\toutputMUX_A = %d,\n\n\tinput0MUX_B = %d,\n\tinput1MUX_B = %d,\n\tinput2MUX_B = %d,\n\tinput3MUX_B = %d,\n\tcontorl signalMUX_B = %b,\n\toutputMUX_B = %d",
+        //   uut.pc_current,
+        //   uut.mux4x1_rf_PA_output.input0,
+        //   uut.mux4x1_rf_PA_output.input1,
+        //   uut.mux4x1_rf_PA_output.input2,
+        //   uut.mux4x1_rf_PA_output.input3,
+        //   uut.mux4x1_rf_PA_output.control_signal,
+        //   uut.mux4x1_rf_PA_output.output_value,
+        //   uut.mux4x1_rf_PB_output.input0,
+        //   uut.mux4x1_rf_PB_output.input1,
+        //   uut.mux4x1_rf_PB_output.input2,
+        //   uut.mux4x1_rf_PB_output.input3,
+        //   uut.mux4x1_rf_PB_output.control_signal,
+        //   uut.mux4x1_rf_PB_output.output_value
         
-//          );
+        //  );
 //         $display("ID Jump Mux");
 //         $monitor("\n\tPC = %d, \n\tImm B = %d, \n\tImm J = %d, \t\nMux 1 Output = %d, \n\tmux 1 Control Signal = %d, \n\tmux 2 input 0 = %d, \n\tmux 2 input 1 = %d, \n\tmux 2 control = %d, \n\tmux 2 output = %d ",
 //             uut.pc_current,
@@ -324,7 +332,7 @@ always @(posedge clk) begin
 
 //         );
         
-//    end
+    end
 
 
 endmodule
