@@ -104,15 +104,15 @@ module Adder(
 endmodule
 
 
-module SE_12bits(
-    output reg [31:0] id_imm12_I_SE,
-    input [11:0] id_imm12_I
-);
+// module SE_12bits(
+//     output reg [31:0] id_imm12_I_SE,
+//     input [11:0] id_imm12_I
+// );
 
-always @(*) begin
-    id_imm12_I_SE = {{20{id_imm12_I[11]}}, id_imm12_I};
-end
-endmodule
+// always @(*) begin
+//     id_imm12_I_SE = {{20{id_imm12_I[11]}}, id_imm12_I};
+// end
+// endmodule
 
 module SE_21bits(
     output reg [31:0] id_imm_J_SE,
@@ -136,15 +136,15 @@ endmodule
 
 
 
-module SE_20bits(
-    output reg [31:0] id_imm20_SE,
-    input [19:0] id_imm20
-);
+// module SE_20bits(
+//     output reg [31:0] id_imm20_SE,
+//     input [19:0] id_imm20
+// );
 
-always@(*) begin
-    id_imm20_SE = {{12{id_imm20[19]}}, id_imm20};
-end
-endmodule
+// always@(*) begin
+//     id_imm20_SE = {{12{id_imm20[19]}}, id_imm20};
+// end
+// endmodule
 
 module id_Adder (
     output reg [31:0] id_TA,
@@ -167,7 +167,7 @@ module instruction_memory(
     //Reading the preload memory
     //If this is not working specified the whole directory of the file.
     initial begin
-      $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/test_code_2.txt", mem);
+      $readmemb("C:/Users/maxme/Desktop/project P/RISCV_Architecture--2/test_code_2.txt", mem);
     end 
     
     //Making the arragment for the instruction
@@ -738,7 +738,7 @@ module data_memory(
         end 
     end
     initial begin
-        $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/test_code_2.txt", mem);
+        $readmemb("C:/Users/maxme/Desktop/project P/RISCV_Architecture--2/test_code_2.txt", mem);
     end
 endmodule
 
@@ -1689,15 +1689,15 @@ module processor(
         .PB(id_PB)
     );
 
-    SE_12bits SE_12bits_inst(
-        .id_imm12_I(id_imm12_I),
-        .id_imm12_I_SE(id_imm12_I_SE)
-    );
+    // SE_12bits SE_12bits_inst(
+    //     .id_imm12_I(id_imm12_I),
+    //     .id_imm12_I_SE(id_imm12_I_SE)
+    // );
 
-    SE_20bits SE_20bits_inst(
-        .id_imm20(id_imm20),
-        .id_imm20_SE(id_imm20_SE)
-    );
+    // SE_20bits SE_20bits_inst(
+    //     .id_imm20(id_imm20),
+    //     .id_imm20_SE(id_imm20_SE)
+    // );
 
     SE_21bits SE_21bits_inst (
         .id_imm_J_SE(id_imm_J_SE),
@@ -1910,17 +1910,17 @@ module processor(
         .output_value(mux2x1_id_TA_output)
     );
 
-    mux2x1 mux2x1_id_Jump_TA(
+    // mux2x1 mux2x1_id_Jump_TA(
+    //     .input0(id_imm_B_SE),
+    //     .input1(id_imm_J_SE), id_imm_J_SE
+    //     .control_signal(id_jal_sig_mux),
+    //     .output_value(mux2x1_id_jump_TA_output)
+    // );
+
+    mux2x1 mux2x1_id_adder_input(
         .input0(id_imm_B_SE),
         .input1(id_imm_J_SE),
         .control_signal(id_jal_sig_mux),
-        .output_value(mux2x1_id_jump_TA_output)
-    );
-
-    mux2x1 mux2x1_id_adder_input(
-        .input0(id_imm20_SE),
-        .input1(mux2x1_id_jump_TA_output),
-        .control_signal(id_b_sig_mux),
         .output_value(mux2x1_id_adder_input_output)
     );
 
