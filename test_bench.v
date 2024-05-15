@@ -61,10 +61,19 @@ module processor_tb;
 //                  uut.id_imm12_I
 //                 );
 always @(posedge clk) begin
-    // $display("\n\tRegisters");
-    $monitor("\n\tTime = %d, \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%d, \n\tr6:%d", $time, uut.pc_current, uut.instruction,
-        uut.registerfile_inst.registers1,uut.registerfile_inst.registers2,uut.registerfile_inst.registers3,
-        uut.registerfile_inst.registers5,uut.registerfile_inst.registers6,
+    $display("\n\tRegisters");
+    $monitor("\n\tTime = %d, \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%b, \n\tr7:%d, \n\tr10:%d, \n\tr14:%b, \n\t31:%d" , 
+        $time, 
+        uut.pc_current, 
+        uut.instruction,
+        uut.registerfile_inst.registers1,
+        uut.registerfile_inst.registers2,
+        uut.registerfile_inst.registers3,
+        uut.registerfile_inst.registers5,
+        uut.registerfile_inst.registers7,
+        uut.registerfile_inst.registers10,
+        uut.registerfile_inst.registers14,
+        uut.registerfile_inst.registers31,
     );
     // initial begin
     //     #58 $display("Mem_48:%b , Mem_49:%b , Mem_50:%b , Mem_51:%b", uut.data_memory_inst.mem{48}, uut.data_memory_inst.mem{49}, uut.data_memory_inst.mem{50}, uut.data_memory_inst.mem{51});
@@ -356,7 +365,38 @@ always @(posedge clk) begin
 //             uut.mux2x1_id_adder_input.output_value
 
 //         );
+
+        // $display("\ex_ta_MUX");
+        // $monitor("\n\t PC = %d, \n\tinput0 = %d,\n\tinput1 = %d,\n\tcontrol_signal = %b, \n\toutput_value = %d",
+        //         uut.pc_current,
+        //         uut.mux2x1_ex_TA.input0,
+        //         uut.mux2x1_ex_TA.input1,
+        //         uut.mux2x1_ex_TA.control_signal,
+        //         uut.mux2x1_ex_TA.output_value
+        // );
+
+    //     $display("\nalu_A_mux");
+    //     $monitor("\n\t PC = %d, \n\t Register 31 = %d, \n\tforwardA = %d, \n\t id_PA = %d, \n\t ex_PA = %d, \n\tinput0 = %d,\n\tinput1 = %d,\n\tcontrol_signal = %b, \n\toutput_value = %d",
+    //             uut.pc_current,
+    //             uut.registerfile_inst.registers31,
+    //             uut.hazard_forwarding_unit_inst.ForwardA,
+    //             uut.mux4x1_rf_PA_output.output_value,
+    //             uut.ID_EX_pipeline_register_inst.ex_PA,
+    //             uut.mux2x1_alu_input_A.input0,
+    //             uut.mux2x1_alu_input_A.input1,
+    //             uut.mux2x1_alu_input_A.control_signal,
+    //             uut.mux2x1_alu_input_A.output_value
+    //     );
         
+    // $display("\n\talu_out");
+    // $monitor(" \t\nPC = %d, \t\nInput 0 = %d, \t\nInput 1 = %d, \t\nControl Signal = %b, \t\nOutput = %d,",
+    // uut.pc_current,
+    // uut.mux2x1_alu_output.input0,
+    // uut.mux2x1_alu_output.input1,
+    // uut.mux2x1_alu_output.control_signal,
+    // uut.mux2x1_alu_output.output_value
+    // );
+
     end
 
 

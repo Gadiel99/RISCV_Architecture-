@@ -1561,7 +1561,7 @@ module processor(
     wire id_ex_pipe_reg_reset_signal = ex_jalr_sig | control_hazard_signal;
      
     // mux2x1_alu_output_cs
-    wire mux2x1_alu_output_cs = id_jal_sig_mux | ex_jalr_sig;
+    wire mux2x1_alu_output_cs = ex_jal_sig | ex_jalr_sig;
 
     wire mux2x1_if_TA_output_cs = id_jal_sig_mux | ex_jalr_sig | control_hazard_signal;
     
