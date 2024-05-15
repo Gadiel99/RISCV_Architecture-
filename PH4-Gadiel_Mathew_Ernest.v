@@ -167,7 +167,7 @@ module instruction_memory(
     //Reading the preload memory
     //If this is not working specified the whole directory of the file.
     initial begin
-      $readmemb("C:/Users/Ernest William/Desktop/test-code.txt", mem);
+      $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/test_code_2.txt", mem);
     end 
     
     //Making the arragment for the instruction
@@ -738,7 +738,7 @@ module data_memory(
         end 
     end
     initial begin
-        $readmemb("C:/Users/Ernest William/Desktop/test-code.txt", mem);
+        $readmemb("C:/Users/jay20/Documents/RISCV_Architecture-/test_code_2.txt", mem);
     end
 endmodule
 
