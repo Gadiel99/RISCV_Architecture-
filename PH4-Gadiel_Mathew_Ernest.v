@@ -167,7 +167,7 @@ module instruction_memory(
     //Reading the preload memory
     //If this is not working specified the whole directory of the file.
     initial begin
-      $readmemb("C:/Users/maxme/Desktop/project P/RISCV_Architecture--2/test_code_2.txt", mem);
+      $readmemb("C:/Users/Ernest William/Desktop/test-code.txt", mem);
     end 
     
     //Making the arragment for the instruction
@@ -490,7 +490,7 @@ module ALU(
     );
     
     always @ (A, B, Op) begin
-        $display("alu_A:%d , alu_B:%d", A, B);
+      //  $display("alu_A:%d , alu_B:%d", A, B);
         case (Op)
             4'b0000: Out = B; // Pass through B
             4'b0001: Out = B + 4; // B + 4
@@ -510,7 +510,7 @@ module ALU(
                  N = Out[31]; // Negative flag
                 // Overflow flag for subtraction
                  V = (A[31] ^ B[31]) & (A[31] ^ Out[31]);
-               $display("alu_Z:%b , alu_N:%b, alu_A:%d , alu_B:%d", Z, N,A,B);
+            //   $display("alu_Z:%b , alu_N:%b, alu_A:%d , alu_B:%d", Z, N,A,B);
             end
 
             4'b0100: Out = (A + B) & 32'hFFFFFFFE; // (A + B) AND with mask for even number
@@ -572,21 +572,21 @@ module CONDITION_HANDLER(
 );
 
 always @(*) begin
-$display("cond:%b, Z:%b, N:%b", ex_full_cond,Z_flag,N_flag);
+//$display("cond:%b, Z:%b, N:%b", ex_full_cond,Z_flag,N_flag);
     // Assuming ex_full_cond[2:0] is the funct3 part
     if(ex_full_cond[9:3] != 7'b1100011)begin
         control_hazard_out = 1'b0;
         
     end else begin
         //if(ex)
-        $display("ex_full_cond[2:0]:%b", ex_full_cond[2:0]);
+      //  $display("ex_full_cond[2:0]:%b", ex_full_cond[2:0]);
         case (ex_full_cond[2:0])
             3'b000: // BEQ
                 if (Z_flag == 1'b1) control_hazard_out = 1'b1;
                 else control_hazard_out = 1'b0;
             3'b001: // BNE
             begin
-                $display("CH_BNE");
+              //  $display("CH_BNE");
                 if (Z_flag == 1'b0) begin
                     control_hazard_out = 1'b1;
                 //$display("CH_BNE");
@@ -738,7 +738,7 @@ module data_memory(
         end 
     end
     initial begin
-        $readmemb("C:/Users/maxme/Desktop/project P/RISCV_Architecture--2/test_code_2.txt", mem);
+        $readmemb("C:/Users/Ernest William/Desktop/test-code.txt", mem);
     end
 endmodule
 
@@ -852,7 +852,7 @@ module control_unit(input wire [31:0] instruction,
                             case(add_sub_sign)
                                 1: begin // SUB case
                                   
-                                  id_alu_op = 4'b0110;
+                                  id_alu_op = 4'b0111;
                                     $display("SRA");
 
                                 end

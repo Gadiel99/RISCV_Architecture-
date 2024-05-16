@@ -4,7 +4,7 @@ module processor_tb;
 
     reg clk, reset;
     wire [31:0] pc_current, instruction, alu_output, id_PA_output, id_PB_output;
-
+    integer i;
     wire [4:0] id_rd;
     wire [31:0] wb_mux2x1_mem_output;
     wire wb_rf_enable;
@@ -30,8 +30,13 @@ module processor_tb;
         #200$finish; // Termina la simulación
     end
      initial begin
-         #190 $display("Mem_48:%b , Mem_49:%b , Mem_50:%b , Mem_51:%b", uut.data_memory_inst.mem[48], uut.data_memory_inst.mem[49], uut.data_memory_inst.mem[50], uut.data_memory_inst.mem[51]);
-       // #190 $display("Mem_40:%b , Mem_41:%b , Mem_42:%b , Mem_43:%b", uut.data_memory_inst.mem[40], uut.data_memory_inst.mem[41], uut.data_memory_inst.mem[42], uut.data_memory_inst.mem[43]);
+      
+        #174
+        
+       for (i = 180; i <= 220; i = i + 4) begin
+            $display("word at %d: %b %b %b %b",i,uut.data_memory_inst.mem[3 + i],uut.data_memory_inst.mem[2 + i], uut.data_memory_inst.mem[1 + i], uut.data_memory_inst.mem[i]);
+        end
+    
     end
    //Monitoreo de senales
 //    always @(posedge clk) begin
@@ -62,7 +67,7 @@ module processor_tb;
 //                 );
 always @(posedge clk) begin
     $display("\n\tRegisters");
-    $monitor("\n\tTime = %d, \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%b, \n\tr7:%d, \n\tr10:%d, \n\tr14:%b, \n\t31:%d" , 
+    $monitor("\n\tTime = %d, \n\tPC = %d, \n\tinstruction = %b\n\tr1:%d, \n\tr2:%d, \n\tr3:%d, \n\tr5:%b, \n\tr7:%d, \n\tr10:%d, \n\tr14:%b, \n\tr31:%d" , 
         $time, 
         uut.pc_current, 
         uut.instruction,
